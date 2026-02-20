@@ -144,7 +144,7 @@ export async function optInToApp(address, signer) {
   const { algod, params } = await _makeATC()
 
   const txn = algosdk.makeApplicationOptInTxnFromObject({
-    from:              address,
+    sender:            address,
     appIndex:          APP_ID,
     suggestedParams:   params,
   })
