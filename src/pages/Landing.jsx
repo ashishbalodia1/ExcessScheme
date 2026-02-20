@@ -175,6 +175,7 @@ export default function Landing() {
             <a href="#features">Features</a>
             <a href="#ai">AI Verify</a>
             <a onClick={() => navigate('/wallet')} style={{ cursor:'pointer' }}>◎ Wallet</a>
+            <a onClick={() => navigate('/about')} style={{ cursor:'pointer' }}>About</a>
             <a href="#login" className="btn-nav">Launch App →</a>
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:'.75rem' }}>
@@ -195,6 +196,7 @@ export default function Landing() {
         <a href="#how-it-works" onClick={() => setNavOpen(false)}>How It Works</a>
         <a href="#features"     onClick={() => setNavOpen(false)}>Features</a>
         <a href="#ai"           onClick={() => setNavOpen(false)}>AI Verify</a>
+        <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); navigate('/about') }} style={{ background:'rgba(0,232,198,.08)', color:'var(--text-2)', border:'1px solid var(--border-2)' }}>ℹ️ About</button>
         <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); navigate('/wallet') }} style={{ background:'rgba(0,232,198,.12)', color:'var(--accent)', border:'1px solid rgba(0,232,198,.25)' }}>◎ Algorand Wallet</button>
         <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); setLoginRole('gov') }}>🏛️ Gov Officer Login</button>
         <button className="btn-nav-mobile" style={{ marginTop:'.5rem', background:'rgba(0,232,198,.12)', color:'var(--accent)' }} onClick={() => { setNavOpen(false); setLoginRole('user') }}>🎓 Student Portal</button>
@@ -392,6 +394,12 @@ export default function Landing() {
               <a href="#">Gov Portal</a>
               <a href="#">Student Portal</a>
               <a href="#">AI Verify</a>
+            </div>
+            <div className="fl-col">
+              <span className="fl-head">Company</span>
+              <a onClick={() => navigate('/about')} style={{ cursor:'pointer' }}>About</a>
+              <a href="mailto:parimeena404@gmail.com">Contact</a>
+              <a href="https://github.com/ashishbalodia1/ExcessScheme" target="_blank" rel="noreferrer">GitHub</a>
             </div>
             <div className="fl-col">
               <span className="fl-head">Legal</span>
