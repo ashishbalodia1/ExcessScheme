@@ -2,30 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import ThemeToggle from '../components/ThemeToggle'
 import '../styles/about.css'
 
-const TEAM = [
-  {
-    name: 'Parimeena Balodia',
-    role: 'Founder & Full-Stack Lead',
-    avatar: '👩‍💻',
-    bio: 'Architected the end-to-end platform — React frontend, Supabase & MongoDB backends, Algorand on-chain integration.',
-    links: { github: 'https://github.com/parimeena404', email: 'parimeena404@gmail.com' },
-  },
-  {
-    name: 'Ashish Balodia',
-    role: 'Blockchain & Smart Contracts',
-    avatar: '🧑‍💻',
-    bio: 'Designed the token minting pipeline, bridge-student distribution model, and Algorand TestNet integration.',
-    links: { github: 'https://github.com/ashishbalodia1', email: 'ashishbalodia1@gmail.com' },
-  },
-  {
-    name: 'AI / Verification Engine',
-    role: 'Automated System',
-    avatar: '🤖',
-    bio: '7-layer AI pipeline: Aadhaar biometrics, GAN-based document forgery detection, vector duplicate screening, and PAN/ITR income cross-reference.',
-    links: {},
-  },
-]
-
 const TECH = [
   { icon: '⚛️',  name: 'React 18 + Vite 6',      desc: 'Lightning-fast frontend with lazy-loaded routes and real-time updates.' },
   { icon: '⛓️',  name: 'Algorand TestNet',         desc: 'Standard assets for scholarship tokens, AlgoNode public endpoints, Pera Wallet connect.' },
@@ -159,27 +135,6 @@ export default function About() {
                 <div className="abt-tl-content">
                   <span className="abt-tl-year">{m.year}</span>
                   <p>{m.event}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* TEAM */}
-      <section className="about-section">
-        <div className="about-section-inner">
-          <h2 className="about-section-title">Team</h2>
-          <div className="about-team-grid">
-            {TEAM.map(t => (
-              <div className="abt-team-card" key={t.name}>
-                <div className="abt-avatar">{t.avatar}</div>
-                <h3>{t.name}</h3>
-                <span className="abt-role">{t.role}</span>
-                <p>{t.bio}</p>
-                <div className="abt-team-links">
-                  {t.links.github && <a href={t.links.github} target="_blank" rel="noreferrer">🔗 GitHub</a>}
-                  {t.links.email  && <a href={`mailto:${t.links.email}`}>✉️ Email</a>}
                 </div>
               </div>
             ))}
