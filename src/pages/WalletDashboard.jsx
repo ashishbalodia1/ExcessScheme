@@ -35,8 +35,17 @@ import {
   fmtDate,
 } from '../lib/algorand'
 import '../styles/wallet.css'
-
-// No demo address — show a proper connect screen when no wallet is linked
+import {
+  makePeraSigner,
+  optInToApp,
+  registerStudent,
+  markMilestoneComplete,
+  releasePayout,
+  getGlobalState,
+  getStudentState,
+  isOptedIn,
+  APP_ID,
+} from '../lib/scholarship-contract'
 
 // ─── Transaction type labels ─────────────────────────────────────────────────
 const TX_LABELS = {
@@ -72,7 +81,17 @@ export default function WalletDashboard() {
   const [txnsError,   setTxnsError]   = useState(null)
 
   // Active tab
-  const [tab, setTab] = useState('overview')  // overview | transactions | assets
+  const [tab, setTab] = useState('overview')  // overview | transactions | assets | contract
+
+  // ── Contract tab state ────────────────────────────────────────────────────
+  const [contractGlobal,  setContractGlobal]  = useState(null)
+  const [contractStudent, setContractStudent] = useState(null)
+  const [contractLoading, setContractLoading] = useState(false)
+  const [contractTx,      setContractTx]      = useState(null)   // last txID
+  const [contractError,   setContractError]   = useState(null)
+  const [contractAction,  setContractAction]  = useState(null)   // in-flight action label
+  const [authorityInput,  setAuthorityInput]  = useState('')     // for admin calls
+  const [studentInput,    setStudentInput]    = useState('')     // for admin calls
 
   // ── Copy address to clipboard ─────────────────────────────────────────────
   const [copied, setCopied] = useState(false)
@@ -113,6 +132,51 @@ export default function WalletDashboard() {
     // Network status (fire and forget)
     getNetworkStatus().then(setNetwork).catch(() => {})
   }, [])
+
+  // ── Load contract state ────────────────────────────────────────────
+  const loadContractState = useCallback(async (addr) => {
+    setContractLoading(true)
+    setContractError(null)
+    try {
+      const [global, student] = await Promise.all([
+        getGlobalState(),
+        getStudentState(addr),
+      ])
+      setContractGlobal(global)
+      setContractStudent(student)
+    } catch (e) {
+      setContractError(e.message ?? 'Failed to load contract state')
+    } finally {
+      setContractLoading(false)
+    }
+  }, [])
+
+  // Auto-refresh contract state when switching to the contract tab
+  useEffect(() => {
+    if (tab === 'contract' && address) loadContractState(address)
+  }, [tab, address, loadContractState])
+
+  // ── Contract action runner ───────────────────────────────────────
+  const runContractAction = async (label, fn) => {
+    setContractAction(label)
+    setContractError(null)
+    setContractTx(null)
+    try {
+      const signer = makePeraSigner(address)
+      const result = await fn(signer)
+      setContractTx(result.txID)
+      // Refresh state after action
+      await loadContractState(address)
+    } catch (e) {
+      setContractError(
+        e?.message?.includes('rejected')
+          ? 'Transaction rejected in Pera Wallet.'
+          : (e?.message ?? 'Transaction failed')
+      )
+    } finally {
+      setContractAction(null)
+    }
+  }
 
   // Fetch enriched assets when account data arrives
   useEffect(() => {
@@ -295,6 +359,7 @@ export default function WalletDashboard() {
             { id: 'overview',     label: '◈ Overview'     },
             { id: 'transactions', label: '⇄ Transactions' },
             { id: 'assets',       label: '🪙 Assets'       },
+            { id: 'contract',     label: '⛓️ Contract'     },
           ].map(t => (
             <button
               key={t.id}
@@ -467,7 +532,201 @@ export default function WalletDashboard() {
           </div>
         )}
 
-        {/* ── Footer ───────────────────────────────────── */}
+        {/* ════════════════════════════════════════════
+            CONTRACT TAB
+        ════════════════════════════════════════════ */}
+        {address && tab === 'contract' && (
+          <div className="wd-panel wd-contract-panel">
+            <div className="wd-panel-header">
+              ⛓️ ScholarshipTreasury
+              <span className="wd-panel-count" style={{ fontSize:'.75rem', fontWeight:400 }}>App #{APP_ID}</span>
+              <button
+                className="wd-btn-sm"
+                onClick={() => loadContractState(address)}
+                disabled={contractLoading}
+                style={{ marginLeft:'auto' }}
+              >
+                {contractLoading ? '↻ Refreshing…' : '↻ Refresh'}
+              </button>
+            </div>
+
+            {/* TX success banner */}
+            {contractTx && (
+              <div className="wd-contract-success">
+                ✅ Transaction confirmed!  
+                <a
+                  href={`https://testnet.algoexplorer.io/tx/${contractTx}`}
+                  target="_blank" rel="noreferrer"
+                >
+                  View on AlgoExplorer ↗
+                </a>
+              </div>
+            )}
+
+            {/* Error banner */}
+            {contractError && (
+              <div className="wd-contract-error">❌ {contractError}</div>
+            )}
+
+            {/* Global state */}
+            {contractGlobal && (
+              <div className="wd-contract-section">
+                <div className="wd-contract-section-title">Scheme (Global State)</div>
+                <div className="wd-contract-grid">
+                  <div className="wd-cg-card">
+                    <span className="wd-cg-label">Status</span>
+                    <span className={`wd-cg-val ${contractGlobal.schemeActive ? 'wd-cg-active' : 'wd-cg-inactive'}`}>
+                      {contractGlobal.schemeActive ? '● Active' : '● Inactive'}
+                    </span>
+                  </div>
+                  <div className="wd-cg-card">
+                    <span className="wd-cg-label">Payout / Student</span>
+                    <span className="wd-cg-val">
+                      {contractGlobal.payoutAmount
+                        ? (Number(contractGlobal.payoutAmount) / 1e6).toFixed(4)
+                        : '—'} ALGO
+                    </span>
+                  </div>
+                  <div className="wd-cg-card">
+                    <span className="wd-cg-label">Spent Budget</span>
+                    <span className="wd-cg-val">
+                      {contractGlobal.spentBudget !== null
+                        ? (Number(contractGlobal.spentBudget) / 1e6).toFixed(4)
+                        : '—'} ALGO
+                    </span>
+                  </div>
+                  <div className="wd-cg-card">
+                    <span className="wd-cg-label">Total Budget</span>
+                    <span className="wd-cg-val">
+                      {contractGlobal.totalBudget !== null
+                        ? (Number(contractGlobal.totalBudget) / 1e6).toFixed(4)
+                        : '—'} ALGO
+                    </span>
+                  </div>
+                </div>
+                {contractGlobal.authority && (
+                  <div className="wd-cg-authority">
+                    🛡️ Authority: <code>{contractGlobal.authority}</code>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Student local state */}
+            <div className="wd-contract-section">
+              <div className="wd-contract-section-title">Your Student Status</div>
+              {contractStudent === null ? (
+                <div className="wd-contract-not-opted">
+                  Not opted in — opt in below to participate.
+                </div>
+              ) : (
+                <div className="wd-contract-status-row">
+                  <span className={`wd-cs-badge ${contractStudent.isRegistered ? 'wd-cs-ok' : 'wd-cs-no'}`}>
+                    {contractStudent.isRegistered ? '✔ Registered' : '✗ Not Registered'}
+                  </span>
+                  <span className={`wd-cs-badge ${contractStudent.milestoneCompleted ? 'wd-cs-ok' : 'wd-cs-no'}`}>
+                    {contractStudent.milestoneCompleted ? '✔ Milestone Done' : '✗ Milestone Pending'}
+                  </span>
+                  <span className={`wd-cs-badge ${contractStudent.hasBeenPaid ? 'wd-cs-ok' : 'wd-cs-no'}`}>
+                    {contractStudent.hasBeenPaid ? '✔ Paid' : '✗ Not Yet Paid'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* ─ Student actions ───────────────────────────── */}
+            <div className="wd-contract-section">
+              <div className="wd-contract-section-title">Student Actions</div>
+              <div className="wd-contract-actions">
+
+                {/* OPT IN */}
+                {contractStudent === null ? (
+                  <button
+                    className="wd-contract-btn"
+                    disabled={!!contractAction}
+                    onClick={() => runContractAction('Opting in…', (signer) =>
+                      optInToApp(address, signer)
+                    )}
+                  >
+                    {contractAction === 'Opting in…' ? contractAction : '🔐 Opt In to App'}
+                  </button>
+                ) : (
+                  <button className="wd-contract-btn wd-contract-btn-done" disabled>
+                    ✔ Opted In
+                  </button>
+                )}
+
+                {/* REGISTER STUDENT */}
+                <button
+                  className="wd-contract-btn"
+                  disabled={!!contractAction || contractStudent === null || contractStudent?.isRegistered}
+                  onClick={() => runContractAction('Registering…', (signer) =>
+                    registerStudent(address, signer)
+                  )}
+                >
+                  {contractAction === 'Registering…'
+                    ? contractAction
+                    : contractStudent?.isRegistered
+                    ? '✔ Registered'
+                    : '📝 Register as Student'}
+                </button>
+
+              </div>
+            </div>
+
+            {/* ─ Authority actions ─────────────────────────── */}
+            <div className="wd-contract-section">
+              <div className="wd-contract-section-title">
+                Authority Actions
+                <span className="wd-contract-auth-note">
+                  (only the authority wallet can sign these)
+                </span>
+              </div>
+
+              <label className="wd-contract-label">Student Address</label>
+              <input
+                className="wd-contract-input"
+                placeholder="ALGOTESTSTUDENTADDRESS…"
+                value={studentInput}
+                onChange={e => setStudentInput(e.target.value)}
+              />
+
+              <div className="wd-contract-actions">
+
+                {/* MARK MILESTONE */}
+                <button
+                  className="wd-contract-btn"
+                  disabled={!!contractAction || !studentInput.trim()}
+                  onClick={() => runContractAction('Marking milestone…', (signer) =>
+                    markMilestoneComplete(address, studentInput.trim(), signer)
+                  )}
+                >
+                  {contractAction === 'Marking milestone…'
+                    ? contractAction
+                    : '✅ Mark Milestone Complete'}
+                </button>
+
+                {/* RELEASE PAYOUT */}
+                <button
+                  className="wd-contract-btn wd-contract-btn-payout"
+                  disabled={!!contractAction || !studentInput.trim()}
+                  onClick={() => runContractAction('Releasing payout…', (signer) =>
+                    releasePayout(address, studentInput.trim(), signer)
+                  )}
+                >
+                  {contractAction === 'Releasing payout…'
+                    ? contractAction
+                    : '💸 Release Payout (Inner Txn)'}
+                </button>
+
+              </div>
+              <p className="wd-contract-note">
+                Payout is sent by the <strong>contract’s inner transaction</strong>.
+                Your wallet sends <strong>0 ALGO directly</strong> — only an App Call.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="wd-footer">
           <span className="wd-testnet-badge">TESTNET</span>
           Data from{' '}
