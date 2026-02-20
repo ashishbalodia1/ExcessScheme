@@ -19,7 +19,7 @@ function BarChart() {
   useEffect(() => {
     const c = canvasRef.current; if (!c) return
     const ctx = c.getContext('2d')
-    const data = [42, 68, 55, 80, 63, 75, 90]
+    const data = [17, 36, 49, 64, 39, 77, 83]
     const labels = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb']
     const th = document.documentElement.getAttribute('data-theme')
     const barColor = th === 'light' ? '#009E88' : '#00E8C6'
@@ -128,19 +128,19 @@ export default function GovDashboard() {
           <div className="tab-content active">
             <div className="dash-welcome">
               <div>
-                <h1>Good Morning, Officer 👋</h1>
-                <p>Here's the live state of all active scholarship schemes.</p>
+                <h1>Good Morning, Officer Rajiv 👋</h1>
+                <p>Live status across all 7 active NSP / central scholarship schemes — FY 2025-26.</p>
               </div>
-              <span className="welcome-date">Feb 19, 2026</span>
+              <span className="welcome-date">Feb 20, 2026</span>
             </div>
             <div className="kpi-grid">
               {[
-                { label:'Active Schemes', val:'6', trend:'↑ 2 this month', cls:'kpi-accent', icon:'🏛️' },
-                { label:'Total Budget', val:'₹220 Cr', trend:'Locked on-chain', cls:'', icon:'💰' },
-                { label:'Tokens Minted', val:'11,000', trend:'↑ 5% vs last month', cls:'', icon:'🔗' },
-                { label:'Applications', val:'1,240', trend:'↑ 180 this week', cls:'', icon:'📝' },
-                { label:'AI Flags', val:'7', trend:'3 critical pending', cls:'kpi-warn', icon:'🚨' },
-                { label:'Distributed', val:'₹84 Cr', trend:'73% utilised', cls:'', icon:'💸' },
+                { label:'Active Schemes',  val:'7',          trend:'↑ 3 added this quarter', cls:'kpi-accent', icon:'🏛️' },
+                { label:'Total Budget',    val:'₹601 Cr',    trend:'Union Budget 2026 allocation', cls:'', icon:'💰' },
+                { label:'Tokens Minted',  val:'26,700',      trend:'₹17.5 Cr tokenised on-chain', cls:'', icon:'🔗' },
+                { label:'Applications',   val:'3,841',       trend:'↑ 312 in last 7 days', cls:'', icon:'📝' },
+                { label:'AI Flags',       val:'6',           trend:'3 critical · 3 warning', cls:'kpi-warn', icon:'🚨' },
+                { label:'Distributed',    val:'₹17.5 Cr',    trend:'68.1% AI pass rate', cls:'', icon:'💸' },
               ].map(k => (
                 <div key={k.label} className={`kpi-card${k.cls?' '+k.cls:''}`}>
                   <div className="kpi-top">
@@ -154,7 +154,7 @@ export default function GovDashboard() {
             </div>
             <div className="charts-row">
               <div className="chart-card">
-                <span className="chart-title">Monthly Token Distribution (₹ Cr)</span>
+                <span className="chart-title">Monthly Token Distribution (₹ Cr) · Aug 2025 – Feb 2026</span>
                 <BarChart />
               </div>
               <div className="chart-card" style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
@@ -168,14 +168,16 @@ export default function GovDashboard() {
                   <span className="chart-title" style={{ margin:0 }}>Recent Transactions</span>
                 </div>
                 <table className="dash-table">
-                  <thead><tr><th>TX Hash</th><th>Scheme</th><th>Amount</th><th>Status</th></tr></thead>
+                  <thead><tr><th>TX Hash</th><th>Scheme</th><th>Amount</th><th>Tokens</th><th>Status</th><th>Block</th></tr></thead>
                   <tbody>
                     {TX_DATA.map(tx => (
                       <tr key={tx.hash}>
-                        <td className="tx-hash">{tx.hash}</td>
+                        <td className="tx-hash" title={tx.fullHash}>{tx.hash}</td>
                         <td>{tx.scheme}</td>
                         <td>{tx.amount}</td>
+                        <td style={{fontVariantNumeric:'tabular-nums'}}>{tx.tokens ? tx.tokens.toLocaleString() : '—'}</td>
                         <td><StatusBadge status={tx.status} /></td>
+                        <td style={{fontSize:'.72rem',color:'var(--text-3)'}}>{tx.block ? tx.block.toLocaleString() : 'Pending'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -236,7 +238,8 @@ export default function GovDashboard() {
                   </div>
                   <p className="sc-body">{s.criteria}</p>
                   <div className="sc-meta">
-                    <span>💰 ₹{s.amount.toLocaleString()}</span>
+                    <span>🏛️ {s.ministry || s.cat}</span>
+                    <span>💰 ₹{s.amount.toLocaleString()}/student</span>
                     <span>👥 {s.benef.toLocaleString()} beneficiaries</span>
                     <span>📅 {s.deadline}</span>
                   </div>
@@ -295,15 +298,15 @@ export default function GovDashboard() {
                   <div className="tpc-grid">
                     <div className="tpc-item"><span className="tpc-l">Scheme</span><span className="tpc-v">{mintScheme.slice(0,24)}…</span></div>
                     <div className="tpc-item"><span className="tpc-l">Tokens</span><span className="tpc-v accent">{mintAmount.toLocaleString()}</span></div>
-                    <div className="tpc-item"><span className="tpc-l">Value Each</span><span className="tpc-v">₹50,000</span></div>
-                    <div className="tpc-item"><span className="tpc-l">Total Value</span><span className="tpc-v accent">₹{(mintAmount*50000).toLocaleString()}</span></div>
+                    <div className="tpc-item"><span className="tpc-l">Value Each</span><span className="tpc-v">₹{(SCHEMES.find(s=>s.name===mintScheme)?.amount||12000).toLocaleString()}</span></div>
+                    <div className="tpc-item"><span className="tpc-l">Total Value</span><span className="tpc-v accent">₹{(mintAmount*(SCHEMES.find(s=>s.name===mintScheme)?.amount||12000)).toLocaleString()}</span></div>
                   </div>
                   <div className="tpc-footer">Lock Until: <span>2026-12-31</span></div>
                 </div>
                 <div className="minted-list">
                   <h4>Recently Minted</h4>
                   {MINTED_HISTORY.map(m => (
-                    <div key={m.scheme} className="minted-item">
+                    <div key={m.txHash} className="minted-item">
                       <span className="mi-scheme">{m.scheme}</span>
                       <span>{m.tokens.toLocaleString()} tokens</span>
                       <span className="mi-val">{m.amount}</span>
@@ -337,12 +340,15 @@ export default function GovDashboard() {
               <div key={a.id} className="app-row">
                 <div>
                   <div className="app-name">{a.name}</div>
-                  <div className="app-id">{a.studentId}</div>
+                  <div className="app-id">{a.studentId} · {a.inst}</div>
                 </div>
                 <div className="app-scheme">{a.scheme}</div>
                 <div className="app-amount">₹{a.amount.toLocaleString()}</div>
                 <StatusBadge status={a.status} />
                 <div style={{ fontSize:'.78rem', color:'var(--text-3)' }}>{a.date}</div>
+                <div style={{ fontSize:'.75rem', color:'var(--text-3)', display:'flex', alignItems:'center', gap:'.25rem' }}>
+                  🛡️ {a.aiScore}/100
+                </div>
                 <div className="app-actions">
                   {a.status === 'Pending Review' || a.status === 'AI Verified' ? (
                     <>

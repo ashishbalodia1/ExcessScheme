@@ -15,11 +15,11 @@ const TABS = [
 ]
 
 const TIMELINE = [
-  { icon:'✅', title:'Application Submitted', desc:'PM National Scholarship 2026', time:'Feb 16, 2026', state:'done' },
-  { icon:'✅', title:'AI Verification Passed', desc:'Score: 87/100 — All checks passed', time:'Feb 16, 2026', state:'done' },
-  { icon:'✅', title:'Gov Officer Approved', desc:'Approved by Officer OFF-2026-001', time:'Feb 17, 2026', state:'done' },
-  { icon:'⏳', title:'Token Minting in Progress', desc:'Awaiting batch mint confirmation', time:'Pending', state:'pending' },
-  { icon:'⬜', title:'Token Received in Wallet', desc:'Will appear in My Tokens', time:'—', state:'waiting' },
+  { icon:'✅', title:'Application Submitted', desc:'AICTE Pragati Scholarship — APP-2026-000478', time:'Feb 03, 2026', state:'done' },
+  { icon:'✅', title:'AI Verification Passed', desc:'Score: 88/100 — Identity, documents, income all cleared', time:'Feb 03, 2026', state:'done' },
+  { icon:'✅', title:'Gov Officer Approved', desc:'Approved by Sr. Officer Rajiv Sharma (OFF-001)', time:'Feb 06, 2026', state:'done' },
+  { icon:'✅', title:'Token Minted On-Chain', desc:'Asset ID 78812341 · Block 31198432 · Algorand TestNet', time:'Feb 08, 2026', state:'done' },
+  { icon:'⏳', title:'Token Distributed to Wallet', desc:'Awaiting final distribution batch — BATCH-2026-0021', time:'Pending', state:'pending' },
 ]
 
 const AI_STEPS = [
@@ -117,18 +117,18 @@ export default function UserDashboard() {
             <div className="dash-welcome">
               <div>
                 <h1>Welcome back, Priya 👋</h1>
-                <p>Your scholarship journey at a glance.</p>
+                <p>Your AICTE Pragati token is minted — distribution pending batch 0021.</p>
               </div>
-              <span className="welcome-date">STU-2026-0042</span>
+              <span className="welcome-date">STU-2026-0554</span>
             </div>
             <div className="kpi-grid">
               {[
-                { label:'Active Applications', val:'3', icon:'📝', cls:'kpi-accent' },
-                { label:'Tokens Received', val:'2', icon:'💎', cls:'' },
-                { label:'Total Scholarship', val:'₹80,000', icon:'💰', cls:'' },
-                { label:'Trust Score', val:'87/100', icon:'🛡️', cls:'kpi-accent' },
-                { label:'Pending Tokens', val:'1', icon:'⏳', cls:'kpi-warn' },
-                { label:'Redeemed', val:'₹0', icon:'✅', cls:'' },
+                { label:'Active Applications', val:'3',         icon:'📝', cls:'kpi-accent' },
+                { label:'Tokens Received',     val:'2',         icon:'💎', cls:'' },
+                { label:'Total Scholarship',   val:'₹62,000',   icon:'💰', cls:'' },
+                { label:'AI Trust Score',      val:'88/100',    icon:'🛡️', cls:'kpi-accent' },
+                { label:'Pending Distribution',val:'1 token',   icon:'⏳', cls:'kpi-warn' },
+                { label:'Amount Redeemable',   val:'₹62,000',   icon:'✅', cls:'' },
               ].map(k => (
                 <div key={k.label} className={`kpi-card${k.cls?' '+k.cls:''}`}>
                   <div className="kpi-top">
@@ -157,13 +157,15 @@ export default function UserDashboard() {
               </div>
               <div className="table-card" style={{ padding:'1.6rem', textAlign:'center' }}>
                 <span className="chart-title">Trust Score</span>
-                <TrustGauge score={87} />
+                <TrustGauge score={88} />
                 <div className="gauge-checks" style={{ marginTop:'1rem' }}>
                   {[
-                    { label:'Identity', val:'Verified', ok:true },
-                    { label:'Documents', val:'Authentic', ok:true },
-                    { label:'Income', val:'Confirmed', ok:true },
+                    { label:'Identity',    val:'Aadhaar Verified', ok:true },
+                    { label:'Documents',  val:'Authentic (OCR 96%)', ok:true },
+                    { label:'Income',     val:'₹4.2L — Confirmed', ok:true },
                     { label:'Duplicates', val:'None Found', ok:true },
+                    { label:'Bank A/C',   val:'HDFC XXXX-4821', ok:true },
+                    { label:'Eligibility',val:'AICTE Accredited ✓', ok:true },
                   ].map(g => (
                     <div key={g.label} className="gc-item">
                       <span className="gc-label">{g.label}</span>
@@ -204,7 +206,9 @@ export default function UserDashboard() {
                   </div>
                   <p className="sc-body">{s.criteria}</p>
                   <div className="sc-meta">
-                    <span>💰 ₹{s.amount.toLocaleString()}</span>
+                    <span>🏛️ {s.ministry || s.cat}</span>
+                    <span>💰 ₹{s.amount.toLocaleString()}/student</span>
+                    <span>👥 {s.benef.toLocaleString()} beneficiaries</span>
                     <span>📅 {s.deadline}</span>
                   </div>
                   <div className="sc-footer">
@@ -267,6 +271,12 @@ export default function UserDashboard() {
                     Issued: {t.issued}<br/>
                     Expires: {t.expires}
                   </div>
+                  {t.assetId && (
+                    <div className="tc-meta" style={{marginTop:'.4rem'}}>
+                      Asset ID: <strong style={{color:'var(--accent)'}}>{t.assetId}</strong><br/>
+                      TXID: <span title={t.txHash} style={{fontFamily:'monospace',fontSize:'.78rem'}}>{t.txHash?.slice(0,10)}…</span>
+                    </div>
+                  )}
                   <StatusBadge status={t.status} />
                   {t.status === 'redeemable' && (
                     <button
@@ -274,9 +284,11 @@ export default function UserDashboard() {
                       style={{ marginTop:'.8rem', width:'100%' }}
                       onClick={() => setTokens(prev => prev.map(x => x.id===t.id ? {...x,status:'redeemed'} : x))}
                     >
-                      Redeem to Bank
+                      ⬇ Redeem to Bank
                     </button>
                   )}
+                  {t.status === 'redeemed' && <p style={{color:'var(--accent)',margin:'.8rem 0 0',fontSize:'.82rem'}}>✓ Redeemed to linked bank account</p>}
+                  {t.status === 'pending'   && <p style={{color:'#F59E0B',margin:'.8rem 0 0',fontSize:'.82rem'}}>⏳ Awaiting officer approval — not yet minted</p>}
                 </div>
               ))}
             </div>
