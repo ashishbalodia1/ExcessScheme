@@ -142,45 +142,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* CONTACT */}
-      <section className="about-section about-section-alt" id="contact">
-        <div className="about-section-inner">
-          <h2 className="about-section-title">Contact & Links</h2>
-          <div className="about-contact-grid">
-            <div className="abt-contact-card">
-              <span className="abt-cc-icon">✉️</span>
-              <strong>General Enquiries</strong>
-              <a href="mailto:parimeena404@gmail.com">parimeena404@gmail.com</a>
-            </div>
-            <div className="abt-contact-card">
-              <span className="abt-cc-icon">🐙</span>
-              <strong>Source Code</strong>
-              <a href="https://github.com/ashishbalodia1/ExcessScheme" target="_blank" rel="noreferrer">github.com/ashishbalodia1/ExcessScheme</a>
-            </div>
-            <div className="abt-contact-card">
-              <span className="abt-cc-icon">🏛️</span>
-              <strong>Built For</strong>
-              <span>Hackathon 2026 — MeitY / NIC Innovation Challenge</span>
-            </div>
-            <div className="abt-contact-card">
-              <span className="abt-cc-icon">⛓️</span>
-              <strong>Blockchain Network</strong>
-              <span>Algorand TestNet — AlgoNode public endpoints</span>
-            </div>
-            <div className="abt-contact-card">
-              <span className="abt-cc-icon">📍</span>
-              <strong>Location</strong>
-              <span>India 🇮🇳</span>
-            </div>
-            <div className="abt-contact-card">
-              <span className="abt-cc-icon">📜</span>
-              <strong>License</strong>
-              <span>MIT — open source, free to use and modify</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* FOOTER */}
       <footer className="about-footer">
         <p>© 2026 ExpressScheme · Built for Hackathon · MIT License</p>
