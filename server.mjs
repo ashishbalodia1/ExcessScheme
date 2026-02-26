@@ -4,9 +4,10 @@
  * Keeps MongoDB credentials server-side (never exposed to browser).
  */
 
-import express   from 'express'
-import cors      from 'cors'
+import express        from 'express'
+import cors           from 'cors'
 import { MongoClient, ObjectId } from 'mongodb'
+import crypto         from 'crypto'
 
 // ── Connection config ─────────────────────────────────────────────────
 const MONGO_URI = 'mongodb+srv://mytholover85_db_user:DsJP1dAddduUiCx8@cluster0.eqmtdhi.mongodb.net/?appName=Cluster0'
@@ -170,6 +171,98 @@ app.post('/api/mongo/upsertOne', async (req, res) => {
 })
 
 // ── Start ─────────────────────────────────────────────────────────────
+// ── Auth helpers ─────────────────────────────────────────────────────
+const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex')
+
+// In-memory OTP store  { phone → { otp, expiresAt } }
+const otpStore = new Map()
+
+// ── POST /api/auth/register ──────────────────────────────────────────
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const database = await getDb()
+    const { name, phone, password, aadhaar, employment } = req.body
+    if (!name || !phone || !password) return res.status(400).json({ error: 'name, phone and password are required' })
+
+    const existing = await database.collection('citizen_users').findOne({ phone })
+    if (existing) return res.status(409).json({ error: 'Phone number already registered' })
+
+    const doc = {
+      name,
+      phone,
+      passwordHash: sha256(password),
+      aadhaarHash:  aadhaar ? sha256(aadhaar) : null,
+      aadhaarLast4: aadhaar ? aadhaar.replace(/\D/g,'').slice(-4) : null,
+      employment:   employment || 'not_specified',
+      createdAt:    new Date(),
+      updatedAt:    new Date(),
+    }
+    const result = await database.collection('citizen_users').insertOne(doc)
+    const user = { _id: result.insertedId.toString(), name: doc.name, phone: doc.phone, employment: doc.employment, aadhaarLast4: doc.aadhaarLast4 }
+    return res.json({ data: user, error: null })
+  } catch (e) {
+    res.status(500).json({ data: null, error: e.message })
+  }
+})
+
+// ── POST /api/auth/login ─────────────────────────────────────────────
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const database = await getDb()
+    const { phone, password } = req.body
+    if (!phone || !password) return res.status(400).json({ error: 'phone and password are required' })
+
+    const doc = await database.collection('citizen_users').findOne({ phone })
+    if (!doc) return res.status(401).json({ error: 'Phone number not found' })
+    if (doc.passwordHash !== sha256(password)) return res.status(401).json({ error: 'Incorrect password' })
+
+    const user = { _id: doc._id.toString(), name: doc.name, phone: doc.phone, employment: doc.employment, aadhaarLast4: doc.aadhaarLast4 }
+    return res.json({ data: user, error: null })
+  } catch (e) {
+    res.status(500).json({ data: null, error: e.message })
+  }
+})
+
+// ── POST /api/auth/send-otp ──────────────────────────────────────────
+app.post('/api/auth/send-otp', async (req, res) => {
+  try {
+    const database = await getDb()
+    const { phone } = req.body
+    if (!phone) return res.status(400).json({ error: 'phone is required' })
+
+    const doc = await database.collection('citizen_users').findOne({ phone })
+    if (!doc) return res.status(404).json({ error: 'Phone number not registered' })
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000))
+    otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 })
+    console.log(`  📱 OTP for ${phone}: ${otp}`)   // In production → send via SMS
+    return res.json({ data: { sent: true, demo_otp: otp }, error: null })
+  } catch (e) {
+    res.status(500).json({ data: null, error: e.message })
+  }
+})
+
+// ── POST /api/auth/verify-otp ────────────────────────────────────────
+app.post('/api/auth/verify-otp', async (req, res) => {
+  try {
+    const database = await getDb()
+    const { phone, otp } = req.body
+    if (!phone || !otp) return res.status(400).json({ error: 'phone and otp are required' })
+
+    const entry = otpStore.get(phone)
+    if (!entry) return res.status(400).json({ error: 'No OTP requested for this number' })
+    if (Date.now() > entry.expiresAt) { otpStore.delete(phone); return res.status(400).json({ error: 'OTP expired' }) }
+    if (entry.otp !== otp) return res.status(401).json({ error: 'Incorrect OTP' })
+
+    otpStore.delete(phone)
+    const doc = await database.collection('citizen_users').findOne({ phone })
+    const user = { _id: doc._id.toString(), name: doc.name, phone: doc.phone, employment: doc.employment, aadhaarLast4: doc.aadhaarLast4 }
+    return res.json({ data: user, error: null })
+  } catch (e) {
+    res.status(500).json({ data: null, error: e.message })
+  }
+})
+
 app.listen(PORT, () => {
   console.log('')
   console.log('╔══════════════════════════════════════════════════════╗')
