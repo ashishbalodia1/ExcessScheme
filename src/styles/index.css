@@ -137,21 +137,19 @@ img { display:block; max-width:100%; }
 .btn-nav:hover { opacity:.85; transform:translateY(-1px); }
 
 /* ── HERO ── */
-/* ── LANDING PAGE PHOTO BACKGROUND ── */
-.landing-root {
+/* ── HOW IT WORKS — PHOTO SECTION BACKGROUND ── */
+.section-dark.photo-bg {
   position: relative;
-}
-.landing-root::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url('/Schemephoto1.png');
+  background-image:
+    linear-gradient(135deg,
+      rgba(5,10,14,0.88) 0%,
+      rgba(8,15,22,0.82) 50%,
+      rgba(5,10,14,0.92) 100%),
+    url('/Schemephoto1.png');
   background-size: cover;
-  background-position: center top;
+  background-position: center center;
+  background-repeat: no-repeat;
   background-attachment: fixed;
-  opacity: 0.13;
-  z-index: -1;
-  pointer-events: none;
 }
 
 .hero {

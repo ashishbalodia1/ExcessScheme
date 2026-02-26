@@ -155,7 +155,7 @@ export default function Landing() {
   }
 
   return (
-    <div className="landing-root">
+    <div>
       <NetworkCanvas />
       <Sparkles />
       {/* ambient bg orbs */}
@@ -249,7 +249,7 @@ export default function Landing() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="section section-dark" id="how-it-works">
+      <section className="section section-dark photo-bg" id="how-it-works">
         <div className="container">
           <p className="section-label" style={{ textAlign:'center' }}>How It Works</p>
           <h2 className="section-title">Five Steps to Transparent Scholarship</h2>
