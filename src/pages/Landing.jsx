@@ -203,6 +203,7 @@ export default function Landing() {
       </div>
 
       {/* HERO */}
+      <div className="hero-photo-wrap">
       <section className="hero">
         <div className="hero-content">
           <div className="hero-badge">
@@ -247,9 +248,10 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      </div>{/* /hero-photo-wrap */}
 
       {/* HOW IT WORKS */}
-      <section className="section section-dark photo-bg" id="how-it-works">
+      <section className="section section-dark" id="how-it-works">
         <div className="container">
           <p className="section-label" style={{ textAlign:'center' }}>How It Works</p>
           <h2 className="section-title">Five Steps to Transparent Scholarship</h2>
