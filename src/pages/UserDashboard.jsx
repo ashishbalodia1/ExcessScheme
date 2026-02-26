@@ -160,7 +160,7 @@ export default function UserDashboard() {
         <div className="dash-topbar">
           <div className="topbar-left">
             <button className="sidebar-toggle" onClick={() => setSidebarOpen(o=>!o)}>☰</button>
-            <span className="topbar-title">Student Portal</span>
+            <span className="topbar-title">Citizen Portal</span>
           </div>
           <div className="topbar-right">
             <div className="verify-status"><span className="chain-dot"></span>AI Verified</div>

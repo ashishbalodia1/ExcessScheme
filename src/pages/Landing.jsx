@@ -69,7 +69,7 @@ const FEATURES = [
     tech:['Role-Based Access Control','PDF Report Generation','On-Chain Report Anchoring','Audit Event Bus'],
   },
   {
-    icon:'🎓', title:'Student Portal',
+    icon:'🎓', title:'Citizen Portal',
     desc:'Students apply, track status, verify identity, hold tokens in a wallet, and redeem directly to their bank — all in one dashboard.',
     tagline:'From application to bank — one dashboard.',
     highlights:[
@@ -199,7 +199,7 @@ export default function Landing() {
         <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); navigate('/about') }} style={{ background:'rgba(0,232,198,.08)', color:'var(--text-2)', border:'1px solid var(--border-2)' }}>ℹ️ About</button>
         <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); navigate('/wallet') }} style={{ background:'rgba(0,232,198,.12)', color:'var(--accent)', border:'1px solid rgba(0,232,198,.25)' }}>◎ Algorand Wallet</button>
         <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); setLoginRole('gov') }}>🏛️ Gov Officer Login</button>
-        <button className="btn-nav-mobile" style={{ marginTop:'.5rem', background:'rgba(0,232,198,.12)', color:'var(--accent)' }} onClick={() => { setNavOpen(false); setLoginRole('user') }}>🎓 Student Portal</button>
+        <button className="btn-nav-mobile" style={{ marginTop:'.5rem', background:'rgba(0,232,198,.12)', color:'var(--accent)' }} onClick={() => { setNavOpen(false); setLoginRole('user') }}>🎓 Citizen Portal</button>
       </div>
 
       {/* HERO */}
@@ -210,7 +210,7 @@ export default function Landing() {
             Blockchain × AI × Government Schemes
           </div>
           <h1 className="hero-title">
-            Scholarship Funds.<br />
+            Scheme Funds.<br />
             <span className="gradient-text">Tokenised.<br/>Verified.<br/>Distributed.</span>
           </h1>
           <p className="hero-sub">
@@ -218,7 +218,7 @@ export default function Landing() {
           </p>
           <div className="hero-cta">
             <button className="btn-primary" onClick={() => setLoginRole('gov')}>🏛️ Gov Officer Login</button>
-            <button className="btn-ghost"   onClick={() => setLoginRole('user')}>🎓 Student Portal</button>
+            <button className="btn-ghost"   onClick={() => setLoginRole('user')}>🎓 Citizen Portal</button>
             <a onClick={() => navigate('/wallet')} style={{ cursor:'pointer' }}>◎ Wallet</a>
           </div>
           <div className="hero-stats" ref={countersRef}>
@@ -392,7 +392,7 @@ export default function Landing() {
             <div className="fl-col">
               <span className="fl-head">Platform</span>
               <a href="#">Gov Portal</a>
-              <a href="#">Student Portal</a>
+              <a href="#">Citizen Portal</a>
               <a href="#">AI Verify</a>
             </div>
             <div className="fl-col">

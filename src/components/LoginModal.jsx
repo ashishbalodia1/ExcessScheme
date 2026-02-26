@@ -47,7 +47,7 @@ export default function LoginModal({ role, onClose }) {
             />
           </div>
           <button type="submit" className="btn-primary w-full">
-            {isGov ? '🏛️ Enter Gov Portal' : '🎓 Enter Student Portal'}
+            {isGov ? '🏛️ Enter Gov Portal' : '🎓 Enter Citizen Portal'}
           </button>
         </form>
         <p className="modal-note">Demo: any email / password works</p>

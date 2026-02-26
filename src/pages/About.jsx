@@ -33,7 +33,7 @@ export default function About() {
           <div className="about-nav-links">
             <button onClick={() => navigate('/')}>Home</button>
             <button onClick={() => navigate('/gov-dashboard')}>Gov Portal</button>
-            <button onClick={() => navigate('/user-dashboard')}>Student Portal</button>
+            <button onClick={() => navigate('/user-dashboard')}>Citizen Portal</button>
             <button onClick={() => navigate('/wallet')}>◎ Wallet</button>
           </div>
           <ThemeToggle />
@@ -148,7 +148,7 @@ export default function About() {
         <div className="about-footer-links">
           <button onClick={() => navigate('/')}>Home</button>
           <button onClick={() => navigate('/gov-dashboard')}>Gov Portal</button>
-          <button onClick={() => navigate('/user-dashboard')}>Student Portal</button>
+          <button onClick={() => navigate('/user-dashboard')}>Citizen Portal</button>
           <button onClick={() => navigate('/wallet')}>◎ Wallet</button>
         </div>
       </footer>

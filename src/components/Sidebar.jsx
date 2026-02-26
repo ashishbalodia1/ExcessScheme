@@ -18,7 +18,7 @@ export default function Sidebar({ role, tabs, activeTab, onTabChange, open, onCl
       </div>
       <div className="sidebar-role-badge">
         <span className={`role-dot ${isGov ? 'gov-dot' : 'user-dot'}`}></span>
-        {isGov ? 'Gov Officer' : 'Student Portal'}
+        {isGov ? 'Gov Officer' : 'Citizen Portal'}
       </div>
 
       <nav className="sidebar-nav">
