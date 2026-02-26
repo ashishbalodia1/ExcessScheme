@@ -155,7 +155,7 @@ export default function Landing() {
   }
 
   return (
-    <div>
+    <div className="landing-root">
       <NetworkCanvas />
       <Sparkles />
       {/* ambient bg orbs */}

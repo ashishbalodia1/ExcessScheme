@@ -56,8 +56,17 @@
 /* HERO */
 .about-hero {
   text-align: center;
-  padding: 5rem 1.5rem 3.5rem;
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,232,198,.07), transparent 70%);
+  padding: 6.5rem 1.5rem 4.5rem;
+  position: relative;
+  background-image:
+    linear-gradient(to bottom,
+      rgba(5,10,14,0.60) 0%,
+      rgba(5,10,14,0.80) 55%,
+      rgba(5,10,14,0.97) 100%),
+    url('/Schemephoto2.png');
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
 }
 .about-hero-badge {
   display: inline-block;
@@ -77,6 +86,7 @@
   font-weight: 800;
   line-height: 1.15;
   margin-bottom: 1.2rem;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.7);
 }
 .abt-grad {
   background: linear-gradient(135deg, #00E8C6, #3B82F6);

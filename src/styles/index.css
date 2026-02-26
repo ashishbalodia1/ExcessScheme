@@ -137,6 +137,23 @@ img { display:block; max-width:100%; }
 .btn-nav:hover { opacity:.85; transform:translateY(-1px); }
 
 /* ── HERO ── */
+/* ── LANDING PAGE PHOTO BACKGROUND ── */
+.landing-root {
+  position: relative;
+}
+.landing-root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/Schemephoto1.png');
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  opacity: 0.13;
+  z-index: -1;
+  pointer-events: none;
+}
+
 .hero {
   position: relative;
   min-height: 100vh;
@@ -192,6 +209,7 @@ img { display:block; max-width:100%; }
   letter-spacing: -.03em;
   margin-bottom: 1.4rem;
   color: var(--text);
+  text-shadow: 0 2px 30px rgba(0,0,0,0.8);
 }
 .gradient-text {
   background: linear-gradient(135deg, var(--accent) 0%, #00A8FF 100%);
