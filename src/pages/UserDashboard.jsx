@@ -51,7 +51,7 @@ function TrustGauge({ score = 87 }) {
     ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,2*Math.PI); ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=12; ctx.stroke()
     const end = Math.PI + (score/100)*Math.PI
     const g = ctx.createLinearGradient(0,0,200,0)
-    g.addColorStop(0,'#EF4444'); g.addColorStop(.5,'#F59E0B'); g.addColorStop(1,'#00E8C6')
+    g.addColorStop(0,'#EF4444'); g.addColorStop(.5,'#FBBF24'); g.addColorStop(1,'#818CF8')
     ctx.beginPath(); ctx.arc(cx,cy,r,Math.PI,end); ctx.strokeStyle=g; ctx.lineWidth=12; ctx.lineCap='round'; ctx.stroke()
   }, [score])
   return (
@@ -166,7 +166,7 @@ export default function UserDashboard() {
             <div className="verify-status"><span className="chain-dot"></span>AI Verified</div>
             <button
               onClick={() => navigate('/wallet')}
-              style={{ background:'rgba(0,232,198,.12)', color:'var(--accent)', border:'1px solid rgba(0,232,198,.3)', borderRadius:'7px', padding:'.38rem .85rem', fontSize:'.82rem', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:'.35rem', whiteSpace:'nowrap' }}
+              style={{ background:'rgba(129,140,248,.12)', color:'var(--accent)', border:'1px solid rgba(129,140,248,.3)', borderRadius:'7px', padding:'.38rem .85rem', fontSize:'.82rem', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:'.35rem', whiteSpace:'nowrap' }}
             >
               ◎ Wallet
             </button>

@@ -24,7 +24,7 @@ export default function App() {
           <Route
             path="/wallet"
             element={
-              <Suspense fallback={<div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'#0e0e14',color:'#00e8c6',fontSize:'1.2rem' }}>Loading Wallet…</div>}>
+              <Suspense fallback={<div style={{ display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',background:'#04051A',color:'#818CF8',fontSize:'1.2rem' }}>Loading Wallet…</div>}>
                 <WalletDashboard />
               </Suspense>
             }

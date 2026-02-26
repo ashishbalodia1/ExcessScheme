@@ -60,9 +60,9 @@
   position: relative;
   background-image:
     linear-gradient(to bottom,
-      rgba(12,6,2,0.55) 0%,
-      rgba(10,8,4,0.78) 55%,
-      rgba(5,10,14,0.97) 100%),
+      rgba(4,6,24,0.60) 0%,
+      rgba(6,8,32,0.80) 55%,
+      rgba(4,5,20,0.97) 100%),
     url('/Schemephoto2.png');
   background-size: cover;
   background-position: center 35%;
@@ -74,9 +74,9 @@
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: #F4C200;
-  background: rgba(244,194,0,.12);
-  border: 1px solid rgba(244,194,0,.35);
+  color: #A5B4FC;
+  background: rgba(79,70,229,.15);
+  border: 1px solid rgba(129,140,248,.40);
   padding: .35rem 1rem;
   border-radius: 999px;
   margin-bottom: 1.5rem;
@@ -91,16 +91,16 @@
   text-shadow: 0 2px 30px rgba(0,0,0,0.85);
 }
 .abt-grad {
-  background: linear-gradient(135deg, #FF7A1A 0%, #F4C200 60%, #FFDB6E 100%);
+  background: linear-gradient(135deg, #818CF8 0%, #A5B4FC 55%, #C7D2FE 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 2px 12px rgba(244,194,0,0.35));
+  filter: drop-shadow(0 2px 12px rgba(129,140,248,0.35));
 }
 .about-hero-sub {
   max-width: 680px;
   margin: 0 auto 2.5rem;
-  color: rgba(230,220,200,0.90);
+  color: rgba(210,215,255,0.88);
   font-size: 1.05rem;
   line-height: 1.7;
   text-shadow: 0 1px 12px rgba(0,0,0,0.6);
@@ -112,8 +112,8 @@
   flex-wrap: wrap;
 }
 .abt-kpi {
-  background: rgba(12,8,4,0.70);
-  border: 1px solid rgba(244,194,0,.22);
+  background: rgba(4,5,26,0.70);
+  border: 1px solid rgba(129,140,248,.25);
   border-radius: 14px;
   padding: 1rem 1.75rem;
   min-width: 130px;
@@ -124,12 +124,12 @@
   display: block;
   font-size: 1.6rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #FF7A1A, #F4C200);
+  background: linear-gradient(135deg, #818CF8, #C7D2FE);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.abt-kpi small { color: rgba(230,210,170,0.75); font-size: .78rem; }
+.abt-kpi small { color: rgba(200,210,240,0.75); font-size: .78rem; }
 
 /* SECTIONS */
 .about-section { padding: 4rem 1.5rem; }
@@ -162,9 +162,9 @@
   padding: 1.75rem;
   transition: transform .2s, border-color .2s;
 }
-.abt-mission-card:hover { transform: translateY(-3px); border-color: rgba(244,194,0,.4); }
+.abt-mission-card:hover { transform: translateY(-3px); border-color: rgba(129,140,248,.4); }
 .abt-mc-icon { font-size: 2rem; margin-bottom: .75rem; }
-.abt-mission-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: .5rem; color: #F4C200; }
+.abt-mission-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: .5rem; color: #A5B4FC; }
 .abt-mission-card p { color: var(--text-2); line-height: 1.65; font-size: .95rem; }
 
 /* PROBLEMS */
@@ -204,7 +204,7 @@
   gap: .4rem;
   transition: transform .2s, border-color .2s;
 }
-.abt-tech-card:hover { transform: translateY(-3px); border-color: rgba(255,122,26,.4); }
+.abt-tech-card:hover { transform: translateY(-3px); border-color: rgba(129,140,248,.4); }
 .abt-tech-icon { font-size: 1.8rem; }
 .abt-tech-card strong { font-size: .95rem; color: var(--text); }
 .abt-tech-card p { color: var(--text-2); font-size: .85rem; line-height: 1.55; margin: 0; }
@@ -226,7 +226,7 @@
   top: .5rem;
   bottom: .5rem;
   width: 2px;
-  background: linear-gradient(to bottom, #FF7A1A, #F4C200);
+  background: linear-gradient(to bottom, #6366F1, #A5B4FC);
   border-radius: 2px;
 }
 .abt-tl-item {
@@ -243,15 +243,15 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #F4C200;
+  background: #818CF8;
   border: 2px solid var(--bg-2);
-  box-shadow: 0 0 8px rgba(244,194,0,.6);
+  box-shadow: 0 0 8px rgba(129,140,248,.6);
   flex-shrink: 0;
 }
 .abt-tl-year {
   font-size: .78rem;
   font-weight: 700;
-  color: #F4C200;
+  color: #A5B4FC;
   letter-spacing: .05em;
   white-space: nowrap;
   min-width: 80px;

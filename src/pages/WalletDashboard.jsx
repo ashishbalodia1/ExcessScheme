@@ -49,7 +49,7 @@ import {
 
 // ─── Transaction type labels ─────────────────────────────────────────────────
 const TX_LABELS = {
-  pay:   { label: 'Payment',        icon: '💸', color: '#00e8c6' },
+  pay:   { label: 'Payment',        icon: '💸', color: '#818cf8' },
   axfer: { label: 'Asset Transfer', icon: '🪙', color: '#a78bfa' },
   appl:  { label: 'App Call',       icon: '⚙️',  color: '#fbbf24' },
   acfg:  { label: 'Asset Config',   icon: '🔧', color: '#f87171' },

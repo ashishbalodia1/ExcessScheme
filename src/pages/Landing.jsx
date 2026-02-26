@@ -196,10 +196,10 @@ export default function Landing() {
         <a href="#how-it-works" onClick={() => setNavOpen(false)}>How It Works</a>
         <a href="#features"     onClick={() => setNavOpen(false)}>Features</a>
         <a href="#ai"           onClick={() => setNavOpen(false)}>AI Verify</a>
-        <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); navigate('/about') }} style={{ background:'rgba(0,232,198,.08)', color:'var(--text-2)', border:'1px solid var(--border-2)' }}>ℹ️ About</button>
-        <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); navigate('/wallet') }} style={{ background:'rgba(0,232,198,.12)', color:'var(--accent)', border:'1px solid rgba(0,232,198,.25)' }}>◎ Algorand Wallet</button>
+        <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); navigate('/about') }} style={{ background:'rgba(129,140,248,.08)', color:'var(--text-2)', border:'1px solid var(--border-2)' }}>ℹ️ About</button>
+        <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); navigate('/wallet') }} style={{ background:'rgba(129,140,248,.12)', color:'var(--accent)', border:'1px solid rgba(129,140,248,.25)' }}>◎ Algorand Wallet</button>
         <button className="btn-nav-mobile" onClick={() => { setNavOpen(false); setLoginRole('gov') }}>🏛️ Gov Officer Login</button>
-        <button className="btn-nav-mobile" style={{ marginTop:'.5rem', background:'rgba(0,232,198,.12)', color:'var(--accent)' }} onClick={() => { setNavOpen(false); setLoginRole('user') }}>🎓 Citizen Portal</button>
+        <button className="btn-nav-mobile" style={{ marginTop:'.5rem', background:'rgba(129,140,248,.12)', color:'var(--accent)' }} onClick={() => { setNavOpen(false); setLoginRole('user') }}>🎓 Citizen Portal</button>
       </div>
 
       {/* HERO */}

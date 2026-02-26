@@ -31,8 +31,8 @@ function BarChart() {
     const data = [17, 36, 49, 64, 39, 77, 83]
     const labels = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb']
     const th = document.documentElement.getAttribute('data-theme')
-    const barColor = th === 'light' ? '#009E88' : '#00E8C6'
-    const textColor = th === 'light' ? '#3D6458' : '#94A3B8'
+    const barColor = th === 'light' ? '#4F46E5' : '#818CF8'
+    const textColor = th === 'light' ? '#475569' : '#94A3B8'
     c.width = c.offsetWidth; c.height = c.offsetHeight || 180
     ctx.clearRect(0, 0, c.width, c.height)
     const pad = 30, bw = Math.floor((c.width - pad * 2) / data.length) - 8
@@ -69,13 +69,13 @@ function DonutChart({ value = 73 }) {
     ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=14; ctx.stroke()
     const start = -Math.PI/2, end = start + (value/100)*Math.PI*2
     const grad = ctx.createLinearGradient(0,0,c.width,c.height)
-    grad.addColorStop(0, th==='light'?'#009E88':'#00E8C6')
-    grad.addColorStop(1, '#00A8FF')
+    grad.addColorStop(0, th==='light'?'#4F46E5':'#818CF8')
+    grad.addColorStop(1, '#38BDF8')
     ctx.beginPath(); ctx.arc(cx,cy,r,start,end); ctx.strokeStyle=grad; ctx.lineWidth=14; ctx.lineCap='round'; ctx.stroke()
-    ctx.fillStyle = th==='light'?'#0F2820':'#fff'
+    ctx.fillStyle = th==='light'?'#0F172A':'#fff'
     ctx.font = 'bold 22px Inter'; ctx.textAlign='center'; ctx.textBaseline='middle'
     ctx.fillText(value+'%', cx, cy-6)
-    ctx.fillStyle = th==='light'?'#3D6458':'#94A3B8'
+    ctx.fillStyle = th==='light'?'#475569':'#94A3B8'
     ctx.font = '11px Inter'; ctx.fillText('Utilized',cx,cy+14)
   }, [value])
   return <canvas ref={canvasRef} style={{ width:'160px', height:'160px', display:'block', margin:'0 auto' }} />
