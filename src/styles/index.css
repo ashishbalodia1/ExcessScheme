@@ -221,11 +221,10 @@ img { display:block; max-width:100%; }
   text-shadow: 0 2px 20px rgba(0,0,0,0.9), 0 4px 60px rgba(0,0,0,0.6);
 }
 .gradient-text {
-  background: linear-gradient(135deg, #00FFD4 0%, #00CFFF 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 18px rgba(0,232,198,0.5));
+  background: none;
+  -webkit-text-fill-color: #ffffff;
+  color: #ffffff;
+  filter: none;
 }
 .hero-sub {
   font-size: 1.1rem;
@@ -713,11 +712,10 @@ img { display:block; max-width:100%; }
 
 /* ── LIGHT MODE: gradient text ── */
 [data-theme="light"] .gradient-text {
-  background: linear-gradient(135deg, #00FFD4 0%, #00CFFF 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 16px rgba(0,232,198,.5));
+  background: none;
+  -webkit-text-fill-color: #ffffff;
+  color: #ffffff;
+  filter: none;
 }
 
 /* ── SCROLLBAR ── */
