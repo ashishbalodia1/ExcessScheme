@@ -158,6 +158,45 @@ const SCHEMES = [
   },
 ]
 
+const BANNER_SLIDES = [
+  {
+    bg: '/DigitalIndia.png',
+    tag: 'Digital India Initiative',
+    title: 'India’s Scholarship\nRevolution',
+    sub: 'Blockchain-powered. AI-verified. Fraud-proof distribution of \u20B98,000 Crore across 2.4 million beneficiaries.',
+    cta1: { label: '🏙️ Explore Platform', href: '#schemes' },
+    cta2: { label: '📊 Live Dashboard', action: 'gov' },
+    badge: '🟢 Platform Live',
+  },
+  {
+    bg: '/Schemephoto2.png',
+    tag: 'PM Fasal Bima Yojana',
+    title: 'Protecting Farmers\nEvery Season',
+    sub: '\u20B916,000 Crore tokenised on-chain. Crop insurance payouts verified by AI and released to 5.6 crore farmers instantly.',
+    cta1: { label: '🌾 Apply for PMFBY', action: 'user' },
+    cta2: { label: '📚 Scheme Details', href: '#schemes' },
+    badge: '🟢 Active Scheme',
+  },
+  {
+    bg: '/banner1.jpg',
+    tag: 'Mukhyamantri Medhavi Vidyarthi Yojana',
+    title: 'Meritocracy Meets\nBlockchain',
+    sub: '1.2 lakh students in Madhya Pradesh receive full tuition support via cryptographic tokens — zero leakage, full transparency.',
+    cta1: { label: '🎓 Apply for MMVY', action: 'user' },
+    cta2: { label: '🔍 Check Eligibility', href: '#schemes' },
+    badge: '🟢 Active Scheme',
+  },
+  {
+    bg: '/banner2.jpg',
+    tag: 'AI Fraud Prevention',
+    title: 'Zero Corruption.\nZero False Payouts.',
+    sub: '7-layer AI pipeline — Aadhaar OTP, OCR forgery detection, duplicate screening — runs in under 2 seconds before any token is minted.',
+    cta1: { label: '🤖 Try AI Verification', href: '/ai-verify' },
+    cta2: { label: '📄 View Audit Trail', action: 'gov' },
+    badge: '🟡 AI Engine Active',
+  },
+]
+
 export default function Landing() {
   const navigate = useNavigate()
   const [loginRole, setLoginRole] = useState(null)
@@ -165,6 +204,8 @@ export default function Landing() {
   const [navOpen, setNavOpen] = useState(false)
   const [featureModal, setFeatureModal] = useState(null)
   const [activeScheme, setActiveScheme] = useState('mmvy')
+  const [slide, setSlide] = useState(0)
+  const slideTimer = useRef(null)
   const countersRef = useRef(null)
   const [counters, setCounters] = useState(STATS.map(() => 0))
   const animatedRef = useRef(false)
@@ -173,6 +214,19 @@ export default function Landing() {
     const onScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const goToSlide = (next) => {
+    clearInterval(slideTimer.current)
+    setSlide(next)
+    slideTimer.current = setInterval(() =>
+      setSlide(s => (s + 1) % BANNER_SLIDES.length), 5000)
+  }
+
+  useEffect(() => {
+    slideTimer.current = setInterval(() =>
+      setSlide(s => (s + 1) % BANNER_SLIDES.length), 5000)
+    return () => clearInterval(slideTimer.current)
   }, [])
 
   useEffect(() => {
@@ -259,9 +313,52 @@ export default function Landing() {
         <button className="btn-nav-mobile" style={{ marginTop:'.5rem', background:'rgba(129,140,248,.12)', color:'var(--accent)' }} onClick={() => { setNavOpen(false); setLoginRole('user') }}>🎓 Citizen Portal</button>
       </div>
 
-      {/* HERO */}
-      <div className="hero-photo-wrap">
-      <section className="hero">
+      {/* ── HERO BANNER SLIDESHOW ── */}
+      <div className="hero-banner" id="top">
+        {BANNER_SLIDES.map((s, i) => (
+          <div
+            key={i}
+            className={`banner-slide${i === slide ? ' active' : ''}`}
+            style={{ backgroundImage:`url('${s.bg}')` }}
+          >
+            <div className="banner-overlay" />
+            <div className="banner-content">
+              <span className="banner-tag">{s.badge}</span>
+              <p className="banner-ministry">{s.tag}</p>
+              <h1 className="banner-title">{s.title.split('|').map((l,j) => <span key={j}>{l}<br/></span>)}</h1>
+              <p className="banner-sub">{s.sub}</p>
+              <div className="banner-cta">
+                {s.cta1.href
+                  ? <a href={s.cta1.href} className="btn-primary banner-btn">{s.cta1.label}</a>
+                  : <button className="btn-primary banner-btn" onClick={() => setLoginRole(s.cta1.action)}>{s.cta1.label}</button>}
+                {s.cta2.href
+                  ? <a href={s.cta2.href} className="btn-ghost banner-btn">{s.cta2.label}</a>
+                  : <button className="btn-ghost banner-btn" onClick={() => setLoginRole(s.cta2.action)}>{s.cta2.label}</button>}
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Prev / Next arrows */}
+        <button className="banner-arrow banner-prev" onClick={() => goToSlide((slide - 1 + BANNER_SLIDES.length) % BANNER_SLIDES.length)}>&#8249;</button>
+        <button className="banner-arrow banner-next" onClick={() => goToSlide((slide + 1) % BANNER_SLIDES.length)}>&#8250;</button>
+
+        {/* Dots */}
+        <div className="banner-dots">
+          {BANNER_SLIDES.map((_, i) => (
+            <button key={i} className={`banner-dot${i === slide ? ' active' : ''}`} onClick={() => goToSlide(i)} />
+          ))}
+        </div>
+
+        {/* Scroll down cue */}
+        <a href="#platform" className="banner-scroll-cue">
+          <span>Explore Platform</span>
+          <span className="bsc-arrow">↓</span>
+        </a>
+      </div>
+
+      {/* ── PLATFORM HERO (orb + stats) ── */}
+      <section className="hero" id="platform">
         <div className="hero-content">
           <div className="hero-badge">
             <span className="badge-dot"></span>
@@ -306,7 +403,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-      </div>{/* /hero-photo-wrap */}
 
       {/* HOW IT WORKS */}
       <section className="section section-dark" id="how-it-works">

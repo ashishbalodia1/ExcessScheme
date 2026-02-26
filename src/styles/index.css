@@ -162,38 +162,7 @@ img { display:block; max-width:100%; }
 .btn-nav:hover { opacity:.85; transform:translateY(-1px); }
 
 /* ── HERO ── */
-/* FULL-VIEWPORT PHOTO BACKGROUND — wraps the entire hero section */
-.hero-photo-wrap {
-  position: relative;
-  background:
-    radial-gradient(ellipse at 18% 55%, rgba(79,70,229,.28) 0%, transparent 52%),
-    radial-gradient(ellipse at 78% 18%, rgba(56,189,248,.18) 0%, transparent 48%),
-    radial-gradient(ellipse at 55% 90%, rgba(124,58,237,.16) 0%, transparent 45%),
-    linear-gradient(145deg, #04051A 0%, #06082A 45%, #04051A 100%);
-  background-attachment: unset;
-  overflow: hidden;
-}
-/* Subtle grid mesh overlay */
-.hero-photo-wrap::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(79,70,229,.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(79,70,229,.06) 1px, transparent 1px);
-  background-size: 48px 48px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-[data-theme="light"] .hero-photo-wrap {
-  background:
-    radial-gradient(ellipse at 18% 55%, rgba(79,70,229,.22) 0%, transparent 52%),
-    radial-gradient(ellipse at 78% 18%, rgba(56,189,248,.14) 0%, transparent 48%),
-    radial-gradient(ellipse at 55% 90%, rgba(124,58,237,.12) 0%, transparent 45%),
-    linear-gradient(145deg, #06082E 0%, #0A0D3A 45%, #06082E 100%);
-}
-
+/* ── HERO SECTION (standalone, dark gradient) ── */
 .hero {
   position: relative;
   min-height: 100vh;
@@ -206,7 +175,211 @@ img { display:block; max-width:100%; }
   margin: 0 auto;
   overflow: hidden;
 }
+/* Hero section dark bg wrapper */
+.hero {
+  background:
+    radial-gradient(ellipse at 18% 55%, rgba(79,70,229,.22) 0%, transparent 52%),
+    radial-gradient(ellipse at 78% 18%, rgba(56,189,248,.14) 0%, transparent 48%),
+    var(--bg);
+}
 #networkCanvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .5;
+}
+.hero-content { position:relative; z-index:2; }
+.hero-visual   { position:relative; z-index:2; }
+
+/* ─────────────────────────────────────────────
+   HERO BANNER SLIDESHOW
+───────────────────────────────────────────── */
+.hero-banner {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 560px;
+  overflow: hidden;
+  margin-top: 68px; /* navbar height */
+}
+.banner-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity .9s ease;
+  display: flex;
+  align-items: center;
+}
+.banner-slide.active { opacity: 1; z-index: 1; }
+
+.banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    rgba(4,5,26,0.82) 0%,
+    rgba(6,8,38,0.62) 45%,
+    rgba(4,5,26,0.50) 100%
+  );
+  z-index: 0;
+}
+[data-theme="light"] .banner-overlay {
+  background: linear-gradient(
+    105deg,
+    rgba(4,5,26,0.75) 0%,
+    rgba(6,8,38,0.55) 45%,
+    rgba(4,5,26,0.40) 100%
+  );
+}
+
+.banner-content {
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+  padding: 0 5vw;
+  animation: bannerIn .8s ease both;
+}
+@keyframes bannerIn {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.banner-slide.active .banner-content { animation: bannerIn .8s ease both; }
+
+.banner-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: rgba(129,140,248,.20);
+  border: 1px solid rgba(129,140,248,.45);
+  border-radius: 999px;
+  padding: .3rem 1rem;
+  font-size: .75rem;
+  font-weight: 700;
+  color: #C7D2FE;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: .9rem;
+  display: block;
+}
+.banner-ministry {
+  font-size: .82rem;
+  font-weight: 600;
+  color: rgba(200,210,255,.75);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: .7rem;
+}
+.banner-title {
+  font-size: clamp(2.2rem, 5.5vw, 3.8rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: #ffffff;
+  text-shadow: 0 2px 24px rgba(0,0,0,.7), 0 4px 60px rgba(0,0,0,.4);
+  margin-bottom: 1.2rem;
+  letter-spacing: -.03em;
+}
+.banner-sub {
+  font-size: 1rem;
+  color: rgba(220,225,255,.88);
+  line-height: 1.72;
+  max-width: 580px;
+  margin-bottom: 2rem;
+  text-shadow: 0 1px 10px rgba(0,0,0,.5);
+}
+.banner-cta {
+  display: flex;
+  gap: .9rem;
+  flex-wrap: wrap;
+}
+.banner-btn { font-size: .9rem; padding: .72rem 1.6rem; }
+
+/* Arrows */
+.banner-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.22);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .2s, transform .2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.banner-arrow:hover { background: rgba(129,140,248,.35); transform: translateY(-50%) scale(1.08); }
+.banner-prev { left: 1.5rem; }
+.banner-next { right: 1.5rem; }
+
+/* Dots */
+.banner-dots {
+  position: absolute;
+  bottom: 5.5rem;
+  left: 5vw;
+  z-index: 3;
+  display: flex;
+  gap: .55rem;
+}
+.banner-dot {
+  width: 28px; height: 4px;
+  border-radius: 2px;
+  border: none;
+  background: rgba(255,255,255,.32);
+  cursor: pointer;
+  transition: background .3s, width .3s;
+}
+.banner-dot.active {
+  background: #818CF8;
+  width: 48px;
+}
+
+/* Scroll cue */
+.banner-scroll-cue {
+  position: absolute;
+  bottom: 1.8rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .3rem;
+  color: rgba(200,210,255,.7);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: color .2s;
+}
+.banner-scroll-cue:hover { color: #A5B4FC; }
+.bsc-arrow {
+  font-size: 1.1rem;
+  animation: bounce-down 1.8s ease-in-out infinite;
+}
+@keyframes bounce-down {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+
+@media (max-width: 768px) {
+  .hero-banner { height: 92vh; margin-top: 56px; }
+  .banner-title { font-size: clamp(1.7rem, 7vw, 2.4rem); }
+  .banner-arrow { width: 38px; height: 38px; font-size: 1.4rem; }
+  .banner-prev { left: .75rem; }
+  .banner-next { right: .75rem; }
+  .banner-dots { left: 50%; transform: translateX(-50%); }
+}
+
+
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -801,17 +974,17 @@ img { display:block; max-width:100%; }
   pointer-events:none;
 }
 
-/* light mode: hero text always white on dark gradient bg */
-[data-theme="light"] .hero-photo-wrap .hero-title { color: #ffffff; }
-[data-theme="light"] .hero-photo-wrap .hero-sub   { color: rgba(210,215,255,.90); }
+/* light mode: hero uses var(--bg) so text uses var(--text) */
+[data-theme="light"] .hero-title { color: var(--text); text-shadow: none; }
+[data-theme="light"] .hero-sub   { color: var(--text-2); text-shadow: none; }
 
-/* wallet link inside hero-cta — always white on photo bg */
-.hero-photo-wrap .hero-cta a {
-  color: rgba(200,210,255,0.9);
+/* wallet link inside hero-cta */
+.hero-cta a {
+  color: var(--accent);
   font-weight: 600;
   transition: color .2s;
 }
-.hero-photo-wrap .hero-cta a:hover { color: #A5B4FC; }
+.hero-cta a:hover { color: var(--accent-dim); }
 
 /* ── LIGHT MODE: gradient text ── */
 [data-theme="light"] .gradient-text {
@@ -820,6 +993,19 @@ img { display:block; max-width:100%; }
   -webkit-text-fill-color: transparent;
   background-clip: text;
   filter: none;
+}
+/* Keep indigo gradient in hero section on dark bg */
+.hero .gradient-text {
+  background: linear-gradient(135deg, #818CF8 0%, #A5B4FC 50%, #38BDF8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+[data-theme="light"] .hero .gradient-text {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #0284C7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 /* Keep white on photo bg even in light mode */
 [data-theme="light"] .hero-photo-wrap .gradient-text {
