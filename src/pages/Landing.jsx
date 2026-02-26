@@ -104,12 +104,67 @@ const STEPS = [
   { num:'05', icon:'💸', title:'Bridge Distributes', desc:'Bridge student atomically distributes tokens to all verified recipients.' },
 ]
 
+const SCHEMES = [
+  {
+    id: 'pmfby',
+    tag: 'Agriculture',
+    tagColor: '#16A34A',
+    icon: '🌾',
+    ministry: 'Ministry of Agriculture & Farmers Welfare',
+    name: 'Pradhan Mantri Fasal Bima Yojana',
+    short: 'PMFBY',
+    desc: 'Comprehensive crop insurance scheme providing financial support to farmers suffering crop loss due to unforeseen events — drought, flood, hailstorm, pest attack.',
+    budget: '₹16,000 Cr',
+    beneficiaries: '5.6 Cr Farmers',
+    tokenAmt: '₹25,000',
+    eligibility: ['Landholding farmer', 'Crop enrollment before season', 'KCC or State registration'],
+    status: 'Active',
+    contractId: 'PMFBY-TKN-2026',
+    blockHeight: '42,198,031',
+  },
+  {
+    id: 'mmvy',
+    tag: 'Education',
+    tagColor: '#7C3AED',
+    icon: '🎓',
+    ministry: 'Govt of Madhya Pradesh — Education Dept.',
+    name: 'Mukhyamantri Medhavi Vidyarthi Yojana',
+    short: 'MMVY',
+    desc: 'Full tuition fee support for meritorious students of MP who score 70%+ in Class XII — covering engineering, medical, law and professional courses at top institutions.',
+    budget: '₹820 Cr',
+    beneficiaries: '1.2 Lakh Students',
+    tokenAmt: '₹1,50,000',
+    eligibility: ['MP domicile', 'Class XII ≥ 70% (CBSE) / 85% (MP Board)', 'Family income ≤ ₹6 Lakh'],
+    status: 'Active',
+    contractId: 'MMVY-TKN-2026',
+    blockHeight: '42,198,445',
+  },
+  {
+    id: 'medhavi',
+    tag: 'Merit Scholarship',
+    tagColor: '#D97706',
+    icon: '🏆',
+    ministry: 'Ministry of Education — National Scholarship Portal',
+    name: 'National Means-cum-Merit Scholarship',
+    short: 'NMMSS',
+    desc: 'Central scholarship of ₹12,000/year for Class IX–XII students from economically weaker sections who clear the national-level NMMS examination.',
+    budget: '₹290 Cr',
+    beneficiaries: '1 Lakh Students',
+    tokenAmt: '₹12,000',
+    eligibility: ['Class VIII ≥ 55% marks', 'Family income ≤ ₹3.5 Lakh', 'NMMS Exam qualified', 'Government / Aided school'],
+    status: 'Active',
+    contractId: 'NMMSS-TKN-2026',
+    blockHeight: '42,198,712',
+  },
+]
+
 export default function Landing() {
   const navigate = useNavigate()
   const [loginRole, setLoginRole] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
   const [featureModal, setFeatureModal] = useState(null)
+  const [activeScheme, setActiveScheme] = useState('mmvy')
   const countersRef = useRef(null)
   const [counters, setCounters] = useState(STATS.map(() => 0))
   const animatedRef = useRef(false)
@@ -168,9 +223,11 @@ export default function Landing() {
         <div className="nav-inner">
           <div className="nav-brand">
             <span className="brand-icon">⚡</span>
+            <span className="brand-india">🇮🇳</span>
             ExpressScheme
           </div>
           <div className="nav-links">
+            <a href="#schemes">Schemes</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#features">Features</a>
             <a href="#ai">AI Verify</a>
@@ -208,14 +265,15 @@ export default function Landing() {
         <div className="hero-content">
           <div className="hero-badge">
             <span className="badge-dot"></span>
-            Blockchain × AI × Government Schemes
+            🇮🇳&nbsp;Government of India &nbsp;·&nbsp; Blockchain × AI
           </div>
           <h1 className="hero-title">
-            Scheme Funds.<br />
+            India's Scheme Funds.<br />
             <span className="gradient-text">Tokenised.<br/>Verified.<br/>Distributed.</span>
           </h1>
           <p className="hero-sub">
-            Blockchain-powered. AI-verified. Fraud-proof.
+            A Digital India initiative powered by Blockchain &amp; AI &mdash; ensuring
+            every rupee reaches its rightful beneficiary with zero corruption.
           </p>
           <div className="hero-cta">
             <button className="btn-primary" onClick={() => setLoginRole('gov')}>🏛️ Gov Officer Login</button>
@@ -271,6 +329,80 @@ export default function Landing() {
               </>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* GOV SCHEMES */}
+      <section className="section" id="schemes" style={{ background:'var(--bg)' }}>
+        <div className="container">
+          <p className="section-label" style={{ textAlign:'center' }}>🏛️ Active Government Schemes</p>
+          <h2 className="section-title">Tokenised on ExpressScheme</h2>
+          <p className="section-sub">Real government schemes — funds locked in smart contracts, disbursed only to AI-verified beneficiaries.</p>
+
+          {/* Scheme tabs */}
+          <div className="scheme-tabs">
+            {SCHEMES.map(s => (
+              <button
+                key={s.id}
+                className={`scheme-tab${activeScheme === s.id ? ' active' : ''}`}
+                onClick={() => setActiveScheme(s.id)}
+              >
+                <span style={{ fontSize:'1.2rem' }}>{s.icon}</span>
+                <span className="st-short">{s.short}</span>
+              </button>
+            ))}
+          </div>
+
+          {SCHEMES.filter(s => s.id === activeScheme).map(s => (
+            <div key={s.id} className="scheme-detail-card">
+              <div className="sdc-left">
+                <div className="sdc-header">
+                  <span className="sdc-tag" style={{ background: s.tagColor + '22', color: s.tagColor, border:`1px solid ${s.tagColor}44` }}>{s.tag}</span>
+                  <span className="sdc-status">🟢 {s.status}</span>
+                </div>
+                <div className="sdc-icon-row">
+                  <span style={{ fontSize:'3rem' }}>{s.icon}</span>
+                  <div>
+                    <div className="sdc-short">{s.short}</div>
+                    <h3 className="sdc-name">{s.name}</h3>
+                    <div className="sdc-ministry">{s.ministry}</div>
+                  </div>
+                </div>
+                <p className="sdc-desc">{s.desc}</p>
+                <div className="sdc-eligibility">
+                  <div className="sdc-el-title">Eligibility Criteria</div>
+                  <ul>
+                    {s.eligibility.map(e => <li key={e}><span className="sdc-tick">✓</span>{e}</li>)}
+                  </ul>
+                </div>
+                <div className="sdc-actions">
+                  <button className="btn-primary" onClick={() => setLoginRole('user')}>📝 Apply Now</button>
+                  <button className="btn-ghost" style={{ fontSize:'.85rem' }} onClick={() => setLoginRole('user')}>🔍 Check Eligibility</button>
+                </div>
+              </div>
+              <div className="sdc-right">
+                <div className="sdc-stat-grid">
+                  <div className="sdc-stat"><span className="sdc-sv">{s.budget}</span><span className="sdc-sl">Annual Budget</span></div>
+                  <div className="sdc-stat"><span className="sdc-sv">{s.beneficiaries}</span><span className="sdc-sl">Beneficiaries</span></div>
+                  <div className="sdc-stat"><span className="sdc-sv">{s.tokenAmt}</span><span className="sdc-sl">Max Token Value</span></div>
+                </div>
+                <div className="sdc-chain-card">
+                  <div className="sdc-chain-title">⛓️ On-Chain Details</div>
+                  <div className="sdc-chain-row"><span>Contract ID</span><span className="sdc-mono">{s.contractId}</span></div>
+                  <div className="sdc-chain-row"><span>Latest Block</span><span className="sdc-mono">{s.blockHeight}</span></div>
+                  <div className="sdc-chain-row"><span>Token Standard</span><span className="sdc-mono">ARC-20 (Algorand)</span></div>
+                  <div className="sdc-chain-row"><span>Verification</span><span className="sdc-mono">AI + Aadhaar OTP</span></div>
+                  <div className="sdc-chain-progress">
+                    <div className="sdc-cp-label"><span>Pool Utilised</span><span>68%</span></div>
+                    <div className="sdc-cp-bar"><div className="sdc-cp-fill" style={{ width:'68%', background: s.tagColor }}></div></div>
+                  </div>
+                </div>
+                <button className="sdc-verify-btn" onClick={() => navigate('/ai-verify')}>
+                  🤖 Verify &amp; Tokenise via AI Engine →
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -387,8 +519,9 @@ export default function Landing() {
       <footer className="footer">
         <div className="footer-inner">
           <div className="footer-brand">
-            <div className="nav-brand brand-name">⚡ ExpressScheme</div>
-            <p>Tokenised government scholarship distribution powered by blockchain and AI.</p>
+            <div className="nav-brand brand-name">🇮🇳 ⚡ ExpressScheme</div>
+            <p>Tokenised government scheme distribution &mdash; powered by Blockchain &amp; AI.</p>
+            <p style={{ fontSize:'.75rem', marginTop:'.35rem', opacity:.6 }}>Conceptual project | Built for innovation hackathon</p>
           </div>
           <div className="footer-links">
             <div className="fl-col">

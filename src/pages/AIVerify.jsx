@@ -41,6 +41,42 @@ export default function AIVerify() {
   const [txHash] = useState(() => '0x' + Array.from({length:40}, () => '0123456789ABCDEF'[Math.floor(Math.random()*16)]).join(''))
   const ringRef = useRef(null)
 
+  // ── Aadhaar Verification State ──
+  const [aadhaarNum, setAadhaarNum] = useState('')
+  const [otpVal, setOtpVal] = useState('')
+  const [aadhaarStep, setAadhaarStep] = useState('idle')   // idle | sending | otp | verifying | success | fail
+  const [aadhaarMsg, setAadhaarMsg]   = useState('')
+  const [otpTimer, setOtpTimer]       = useState(0)
+
+  const formatAadhaar = (v) => v.replace(/\D/g,'').slice(0,12).replace(/(\d{4})(\d{4})?(\d{4})?/, (_,a,b,c) => [a,b,c].filter(Boolean).join(' '))
+
+  const sendOTP = () => {
+    const digits = aadhaarNum.replace(/\s/g,'')
+    if (digits.length !== 12) { setAadhaarMsg('Please enter a valid 12-digit Aadhaar number.'); return }
+    setAadhaarStep('sending'); setAadhaarMsg('')
+    setTimeout(() => {
+      setAadhaarStep('otp')
+      setAadhaarMsg(`OTP sent to mobile linked with Aadhaar …${digits.slice(-4)}`)
+      let t = 30
+      setOtpTimer(t)
+      const iv = setInterval(() => { t--; setOtpTimer(t); if (t <= 0) clearInterval(iv) }, 1000)
+    }, 1400)
+  }
+
+  const verifyOTP = () => {
+    setAadhaarStep('verifying'); setAadhaarMsg('')
+    setTimeout(() => {
+      if (otpVal === '123456' || otpVal.length === 6) {
+        setAadhaarStep('success')
+        setAadhaarMsg('Aadhaar identity verified successfully. Linked to this session.')
+        setUploads(u => ({ ...u, aadhaar: true }))
+      } else {
+        setAadhaarStep('fail')
+        setAadhaarMsg('OTP mismatch. Please try again.')
+      }
+    }, 1600)
+  }
+
   const handleUpload = (doc) => setUploads(u => ({ ...u, [doc]: true }))
 
   const startVerification = () => {
@@ -123,6 +159,94 @@ export default function AIVerify() {
                 <span className="uz-status">{uploads[d.key] ? '✓ Uploaded' : 'Click to upload'}</span>
               </div>
             ))}
+          </div>
+
+          {/* ── AADHAAR VERIFICATION ── */}
+          <div className="aadhaar-verify-card">
+            <div className="avc-header">
+              <span className="avc-icon">🇮🇳</span>
+              <div>
+                <div className="avc-title">UIDAI Aadhaar Verification</div>
+                <div className="avc-sub">Powered by UIDAI API &mdash; OTP on registered mobile</div>
+              </div>
+              {aadhaarStep === 'success' && <span className="avc-badge success">✓ Verified</span>}
+              {aadhaarStep === 'fail'    && <span className="avc-badge fail">✗ Failed</span>}
+            </div>
+
+            {aadhaarStep !== 'success' && (
+              <>
+                <div className="form-group" style={{ marginTop:'1rem' }}>
+                  <label>Aadhaar Number</label>
+                  <input
+                    className="filter-input aadhaar-input"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="XXXX XXXX XXXX"
+                    maxLength={14}
+                    value={aadhaarNum}
+                    onChange={e => setAadhaarNum(formatAadhaar(e.target.value))}
+                    disabled={aadhaarStep==='otp'||aadhaarStep==='verifying'||aadhaarStep==='sending'}
+                  />
+                </div>
+
+                {(aadhaarStep==='idle'||aadhaarStep==='sending') && (
+                  <button
+                    className="btn-primary w-full"
+                    style={{ marginTop:'.75rem' }}
+                    onClick={sendOTP}
+                    disabled={aadhaarStep==='sending'}
+                  >
+                    {aadhaarStep==='sending' ? '⏳ Sending OTP…' : '📱 Send OTP to Registered Mobile'}
+                  </button>
+                )}
+
+                {(aadhaarStep==='otp'||aadhaarStep==='verifying') && (
+                  <>
+                    <div className="form-group" style={{ marginTop:'.75rem' }}>
+                      <label>Enter OTP <span style={{ color:'var(--text-3)', fontWeight:400 }}>({otpTimer > 0 ? `Resend in ${otpTimer}s` : <button className="avc-resend" onClick={() => { setAadhaarStep('idle'); setOtpVal('') }}>Resend</button>})</span></label>
+                      <input
+                        className="filter-input"
+                        type="tel"
+                        placeholder="6-digit OTP"
+                        maxLength={6}
+                        value={otpVal}
+                        onChange={e => setOtpVal(e.target.value.replace(/\D/g,'').slice(0,6))}
+                        disabled={aadhaarStep==='verifying'}
+                      />
+                    </div>
+                    <button
+                      className="btn-primary w-full"
+                      style={{ marginTop:'.75rem', background:'#16A34A' }}
+                      onClick={verifyOTP}
+                      disabled={aadhaarStep==='verifying'||otpVal.length<6}
+                    >
+                      {aadhaarStep==='verifying' ? '⏳ Verifying…' : '✔️ Verify Aadhaar'}
+                    </button>
+                    <p className="avc-demo-hint">Demo: Enter any 6-digit OTP to verify</p>
+                  </>
+                )}
+              </>
+            )}
+
+            {aadhaarStep === 'success' && (
+              <div className="avc-success-row">
+                <div className="avc-verified-info">
+                  <div>👤 <strong>Name:</strong> {formData.name || 'As per Aadhaar'}</div>
+                  <div>📅 <strong>Aadhaar:</strong> XXXX XXXX {aadhaarNum.replace(/\s/g,'').slice(-4)}</div>
+                  <div>📍 <strong>eKYC Status:</strong> <span style={{ color:'#16A34A' }}>Completed</span></div>
+                </div>
+              </div>
+            )}
+
+            {aadhaarMsg && (
+              <p className={`avc-msg ${aadhaarStep==='success'?'ok':aadhaarStep==='fail'?'err':'info'}`}>
+                {aadhaarMsg}
+              </p>
+            )}
+
+            <p className="avc-disclaimer">
+              🔒 This interface simulates UIDAI eKYC API integration. In production, OTP is sent to the Aadhaar-registered mobile number via official UIDAI sandbox.
+            </p>
           </div>
 
           <h2 className="ai-section-title" style={{ marginTop:'2rem' }}>Student Details</h2>
