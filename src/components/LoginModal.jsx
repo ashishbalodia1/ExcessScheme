@@ -1,272 +1,481 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const EMPLOYMENT_OPTIONS = [
-  { value: 'student',          label: '🎓 Student' },
-  { value: 'employed_govt',    label: '🏛️ Employed – Government' },
-  { value: 'employed_private', label: '🏢 Employed – Private Sector' },
-  { value: 'self_employed',    label: '💼 Self-employed / Business' },
-  { value: 'farmer',           label: '🌾 Farmer / Agricultural Worker' },
-  { value: 'unemployed',       label: '🔍 Unemployed / Job-seeker' },
-  { value: 'homemaker',        label: '🏠 Homemaker' },
-  { value: 'retired',          label: '🧓 Retired' },
-  { value: 'other',            label: '✳️ Other' },
+/* ─────────────────────────────────────────────
+   localStorage-backed user database
+   Each user: { id, name, phone, passwordHash,
+     aadhaarHash, aadhaarLast4, employment, createdAt }
+───────────────────────────────────────────── */
+const DB_KEY = 'es_citizen_users'
+const OTP_KEY = 'es_pending_otp'
+
+function dbRead() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY) || '[]') } catch { return [] }
+}
+function dbWrite(users) {
+  localStorage.setItem(DB_KEY, JSON.stringify(users))
+}
+function findByPhone(phone) {
+  return dbRead().find(u => u.phone === phone) || null
+}
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
+}
+
+function genOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
+
+function storePendingOtp(phone, otp) {
+  const expiry = Date.now() + 5 * 60 * 1000
+  sessionStorage.setItem(OTP_KEY, JSON.stringify({ phone, otp, expiry }))
+}
+function validateOtp(phone, entered) {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(OTP_KEY) || 'null')
+    if (!s || s.phone !== phone) return 'No OTP found. Request a new one.'
+    if (Date.now() > s.expiry) return 'OTP expired. Please request a new one.'
+    if (s.otp !== entered) return 'Incorrect OTP. Please try again.'
+    sessionStorage.removeItem(OTP_KEY)
+    return null
+  } catch { return 'OTP validation failed.' }
+}
+
+/* ─────────────────────────────────────────────
+   Employment options
+───────────────────────────────────────────── */
+const EMP_OPTIONS = [
+  { value: 'student',          label: 'Student' },
+  { value: 'employed_govt',    label: 'Employed – Government' },
+  { value: 'employed_private', label: 'Employed – Private Sector' },
+  { value: 'self_employed',    label: 'Self-employed / Business Owner' },
+  { value: 'farmer',           label: 'Farmer / Agricultural Worker' },
+  { value: 'unemployed',       label: 'Unemployed / Job-seeker' },
+  { value: 'homemaker',        label: 'Homemaker' },
+  { value: 'retired',          label: 'Retired' },
+  { value: 'daily_wage',       label: 'Daily Wage Worker' },
+  { value: 'other',            label: 'Other' },
 ]
 
-function maskAadhaar(value) {
-  const digits = value.replace(/\D/g, '').slice(0, 12)
-  if (!digits) return 'XXXX XXXX XXXX ####'
-  const padded = digits.padEnd(12, '#')
-  const parts = [padded.slice(0,4), padded.slice(4,8), padded.slice(8,12)]
-  return parts.map((p, i) => i < 2 ? p.replace(/[0-9]/g, 'X') : p).join(' ')
+/* ─────────────────────────────────────────────
+   Aadhaar live mask  XXXX XXXX 1234
+───────────────────────────────────────────── */
+function maskAadhaar(digits) {
+  if (!digits) return ''
+  const p = digits.padEnd(12, '·')
+  const parts = [p.slice(0,4), p.slice(4,8), p.slice(8,12)]
+  return parts.map((s, i) => i < 2 ? s.replace(/\d/g, 'X') : s).join('  ')
 }
 
-async function apiCall(path, body) {
-  const r = await fetch(path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-  return r.json()
+/* ─────────────────────────────────────────────
+   6-box OTP input
+───────────────────────────────────────────── */
+function OtpBoxes({ value, onChange }) {
+  const refs = Array.from({ length: 6 }, () => useRef(null))
+  const digits = value.split('')
+
+  const handleKey = (i, e) => {
+    if (e.key === 'Backspace') {
+      if (digits[i]) {
+        const next = digits.slice(); next[i] = ''; onChange(next.join(''))
+      } else if (i > 0) {
+        refs[i - 1].current?.focus()
+        const next = digits.slice(); next[i - 1] = ''; onChange(next.join(''))
+      }
+    }
+  }
+  const handleInput = (i, e) => {
+    const ch = e.target.value.replace(/\D/g,'').slice(-1)
+    if (!ch) return
+    const next = digits.slice()
+    next[i] = ch
+    onChange(next.join(''))
+    if (i < 5) refs[i + 1].current?.focus()
+  }
+  const handlePaste = (e) => {
+    const text = e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6)
+    onChange(text.padEnd(6,'').slice(0,6))
+    refs[Math.min(text.length, 5)].current?.focus()
+    e.preventDefault()
+  }
+
+  return (
+    <div className="otp-boxes">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <input
+          key={i} ref={refs[i]}
+          type="text" inputMode="numeric"
+          maxLength={1}
+          value={digits[i] || ''}
+          onChange={e => handleInput(i, e)}
+          onKeyDown={e => handleKey(i, e)}
+          onPaste={i === 0 ? handlePaste : undefined}
+          className={`otp-box${digits[i] ? ' filled' : ''}`}
+          autoFocus={i === 0}
+        />
+      ))}
+    </div>
+  )
 }
 
-// ── Gov login ─────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   Countdown hook
+───────────────────────────────────────────── */
+function useCountdown(initial) {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const start = (n = initial) => {
+    clearInterval(ref.current)
+    setCount(n)
+    ref.current = setInterval(() => setCount(c => { if (c <= 1) { clearInterval(ref.current); return 0 } return c - 1 }), 1000)
+  }
+  useEffect(() => () => clearInterval(ref.current), [])
+  return [count, start]
+}
+
+/* ─────────────────────────────────────────────
+   Gov Login (simple, unchanged)
+───────────────────────────────────────────── */
 function GovLogin({ onDone }) {
-  const [email, setEmail] = useState('')
-  const [pass,  setPass]  = useState('')
   return (
     <>
-      <div className="modal-logo"><span>⚡</span> ExpressScheme</div>
-      <div className="modal-title">Officer Login</div>
-      <div className="modal-sub">Access the Government Control Panel</div>
+      <div className="modal-brand">
+        <span className="modal-brand-icon">🏛️</span>
+        <div>
+          <div className="modal-brand-name">ExpressScheme</div>
+          <div className="modal-brand-sub">Government Officer Portal</div>
+        </div>
+      </div>
       <form className="modal-form" onSubmit={e => { e.preventDefault(); onDone() }}>
         <div className="form-group">
           <label>Officer ID / Email</label>
-          <input type="email" placeholder="officer@gov.in" value={email}
-            onChange={e => setEmail(e.target.value)} required />
+          <input type="email" placeholder="officer@gov.in" required />
         </div>
         <div className="form-group">
           <label>Password</label>
-          <input type="password" placeholder="Enter password" value={pass}
-            onChange={e => setPass(e.target.value)} required />
+          <input type="password" placeholder="Enter password" required />
         </div>
-        <button type="submit" className="btn-primary w-full">🏛️ Enter Gov Portal</button>
+        <button type="submit" className="btn-primary w-full mt-1">
+          Enter Government Portal →
+        </button>
       </form>
-      <p className="modal-note">Demo: any email / password works</p>
+      <p className="modal-note mt-1">Demo: any valid email / password</p>
     </>
   )
 }
 
-// ── Citizen portal ────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   Citizen Portal
+   Screens:
+     login → phone → otp | pwd  (login flow)
+     register → form → verify → success  (register flow)
+───────────────────────────────────────────── */
 function CitizenAuth({ onDone }) {
-  const [view,     setView]     = useState('login')
-  const [loginTab, setLoginTab] = useState('password')
-
-  // Register fields
-  const [regName,    setRegName]    = useState('')
-  const [regPhone,   setRegPhone]   = useState('')
-  const [regPass,    setRegPass]    = useState('')
-  const [regPass2,   setRegPass2]   = useState('')
-  const [regAadhaar, setRegAadhaar] = useState('')
-  const [regEmp,     setRegEmp]     = useState('')
-
-  // Login fields
-  const [loginPhone, setLoginPhone] = useState('')
-  const [loginPass,  setLoginPass]  = useState('')
-  const [otp,        setOtp]        = useState('')
-  const [otpSent,    setOtpSent]    = useState(false)
-  const [demoOtp,    setDemoOtp]    = useState('')
-  const [countdown,  setCountdown]  = useState(0)
-  const timerRef = useRef(null)
-
-  const [loading, setLoading] = useState(false)
+  const [screen, setScreen] = useState('phone')  // phone | otp | pwd | register | verify | success
+  const [phone,   setPhone]   = useState('')
+  const [name,    setName]    = useState('')
+  const [pass,    setPass]    = useState('')
+  const [pass2,   setPass2]   = useState('')
+  const [aadhaar, setAadhaar] = useState('')
+  const [emp,     setEmp]     = useState('')
+  const [otp,     setOtp]     = useState('')
+  const [busy,    setBusy]    = useState(false)
   const [err,     setErr]     = useState('')
-  const [success, setSuccess] = useState('')
+  const [pendOtp, setPendOtp] = useState('')   // for demo display
+  const [countdown, startCountdown] = useCountdown(30)
 
-  const reset = () => { setErr(''); setSuccess('') }
+  const clearErr = () => setErr('')
+  const fmt = (p) => p.replace(/\D/g,'')
 
-  useEffect(() => {
-    if (countdown <= 0) { clearInterval(timerRef.current); return }
-    timerRef.current = setInterval(() => setCountdown(c => c - 1), 1000)
-    return () => clearInterval(timerRef.current)
-  }, [countdown])
-
-  const handleRegister = async (e) => {
-    e.preventDefault(); reset()
-    if (regPass !== regPass2) { setErr('Passwords do not match'); return }
-    if (regPhone.replace(/\D/g,'').length < 10) { setErr('Enter a valid 10-digit phone number'); return }
-    if (regAadhaar && regAadhaar.replace(/\D/g,'').length !== 12) { setErr('Aadhaar must be 12 digits (or leave blank)'); return }
-    setLoading(true)
-    const res = await apiCall('/api/auth/register', {
-      name: regName.trim(), phone: regPhone.replace(/\D/g,''),
-      password: regPass, aadhaar: regAadhaar.replace(/\D/g,'') || null,
-      employment: regEmp || 'not_specified',
-    })
-    setLoading(false)
-    if (res.error) { setErr(res.error); return }
-    setSuccess('Account created! You can now log in.')
-    setTimeout(() => { setView('login'); setSuccess('') }, 2000)
+  /* Step 1 — Phone continue */
+  const handlePhoneContinue = (e) => {
+    e.preventDefault(); clearErr()
+    if (fmt(phone).length !== 10) { setErr('Please enter a valid 10-digit mobile number.'); return }
+    const user = findByPhone(fmt(phone))
+    if (user) {
+      // Existing user → ask how to login (default: send OTP)
+      handleSendOtp()
+    } else {
+      // New user
+      setScreen('register')
+    }
   }
 
-  const handleLoginPass = async (e) => {
-    e.preventDefault(); reset()
-    setLoading(true)
-    const res = await apiCall('/api/auth/login', { phone: loginPhone.replace(/\D/g,''), password: loginPass })
-    setLoading(false)
-    if (res.error) { setErr(res.error); return }
-    onDone(res.data)
+  /* Send OTP (login) */
+  const handleSendOtp = () => {
+    clearErr()
+    const code = genOtp()
+    storePendingOtp(fmt(phone), code)
+    setPendOtp(code)
+    startCountdown(30)
+    setOtp('')
+    setScreen('otp')
   }
 
-  const handleSendOtp = async () => {
-    reset()
-    if (loginPhone.replace(/\D/g,'').length < 10) { setErr('Enter a valid 10-digit phone number'); return }
-    setLoading(true)
-    const res = await apiCall('/api/auth/send-otp', { phone: loginPhone.replace(/\D/g,'') })
-    setLoading(false)
-    if (res.error) { setErr(res.error); return }
-    setOtpSent(true); setCountdown(30)
-    if (res.data?.demo_otp) setDemoOtp(res.data.demo_otp)
-  }
-
+  /* Verify OTP (login) */
   const handleVerifyOtp = async (e) => {
-    e.preventDefault(); reset()
-    setLoading(true)
-    const res = await apiCall('/api/auth/verify-otp', { phone: loginPhone.replace(/\D/g,''), otp })
-    setLoading(false)
-    if (res.error) { setErr(res.error); return }
-    onDone(res.data)
+    e && e.preventDefault(); clearErr()
+    if (otp.length < 6) { setErr('Please enter the complete 6-digit OTP.'); return }
+    const errMsg = validateOtp(fmt(phone), otp)
+    if (errMsg) { setErr(errMsg); return }
+    const user = findByPhone(fmt(phone))
+    if (!user) { setErr('Account not found.'); return }
+    onDone(user)
   }
+
+  /* Password login */
+  const handlePwdLogin = async (e) => {
+    e.preventDefault(); clearErr()
+    setBusy(true)
+    const hash = await sha256(pass)
+    setBusy(false)
+    const user = findByPhone(fmt(phone))
+    if (!user) { setErr('Mobile number not registered.'); return }
+    if (user.passwordHash !== hash) { setErr('Incorrect password. Please try again.'); return }
+    onDone(user)
+  }
+
+  /* Register submit — send OTP to verify phone */
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault(); clearErr()
+    if (!name.trim()) { setErr('Full name is required.'); return }
+    if (fmt(phone).length !== 10) { setErr('Valid 10-digit mobile number required.'); return }
+    if (pass.length < 8) { setErr('Password must be at least 8 characters.'); return }
+    if (pass !== pass2) { setErr('Passwords do not match.'); return }
+    if (aadhaar && fmt(aadhaar).length !== 12) { setErr('Aadhaar must be exactly 12 digits.'); return }
+    if (!emp) { setErr('Please select your employment / professional status.'); return }
+    if (findByPhone(fmt(phone))) { setErr('This mobile number is already registered. Please sign in.'); return }
+    // Send OTP for phone verification
+    const code = genOtp()
+    storePendingOtp(fmt(phone), code)
+    setPendOtp(code)
+    startCountdown(30)
+    setOtp('')
+    setScreen('verify')
+  }
+
+  /* Verify OTP → create account */
+  const handleCreateAccount = async (e) => {
+    e && e.preventDefault(); clearErr()
+    if (otp.length < 6) { setErr('Please enter the complete 6-digit OTP.'); return }
+    const errMsg = validateOtp(fmt(phone), otp)
+    if (errMsg) { setErr(errMsg); return }
+    setBusy(true)
+    const [passwordHash, aadhaarHash] = await Promise.all([
+      sha256(pass),
+      aadhaar ? sha256(fmt(aadhaar)) : Promise.resolve(null),
+    ])
+    const user = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      phone: fmt(phone),
+      passwordHash,
+      aadhaarHash,
+      aadhaarLast4: aadhaar ? fmt(aadhaar).slice(-4) : null,
+      employment: emp,
+      createdAt: new Date().toISOString(),
+    }
+    const users = dbRead()
+    users.push(user)
+    dbWrite(users)
+    setBusy(false)
+    setScreen('success')
+    setTimeout(() => onDone(user), 2200)
+  }
+
+  /* Auto-verify when 6 digits entered */
+  useEffect(() => {
+    if (otp.length === 6 && screen === 'otp') handleVerifyOtp()
+    if (otp.length === 6 && screen === 'verify') handleCreateAccount()
+  }, [otp])
+
+  const maskedPhone = `+91 XXXXXX${fmt(phone).slice(-4)}`
 
   return (
     <>
-      <div className="modal-logo"><span>⚡</span> ExpressScheme</div>
-
-      <div className="modal-auth-tabs">
-        <button className={view === 'login'    ? 'active' : ''} onClick={() => { setView('login');    reset() }}>Sign In</button>
-        <button className={view === 'register' ? 'active' : ''} onClick={() => { setView('register'); reset() }}>New Account</button>
+      {/* Brand header */}
+      <div className="modal-brand">
+        <span className="modal-brand-icon">⚡</span>
+        <div>
+          <div className="modal-brand-name">ExpressScheme</div>
+          <div className="modal-brand-sub">Citizen Services Portal</div>
+        </div>
       </div>
 
-      {/* ── REGISTER ── */}
-      {view === 'register' && (
-        <>
-          <p className="modal-sub" style={{marginBottom:'1rem'}}>Create your citizen account</p>
-          {err     && <div className="auth-msg error">{err}</div>}
-          {success && <div className="auth-msg success">{success}</div>}
-          <form className="modal-form" onSubmit={handleRegister}>
-            <div className="form-group">
-              <label>Full Name *</label>
-              <input type="text" placeholder="Ramesh Kumar" value={regName}
-                onChange={e => setRegName(e.target.value)} required />
+      {/* ── STEP: PHONE ─────────────────────── */}
+      {screen === 'phone' && (
+        <form className="modal-form" onSubmit={handlePhoneContinue}>
+          <div className="modal-step-title">Sign In / Register</div>
+          <p className="modal-step-sub">Enter your mobile number to continue</p>
+          {err && <div className="auth-msg error">{err}</div>}
+          <div className="form-group">
+            <label>Mobile Number</label>
+            <div className="phone-input-wrap">
+              <span className="phone-prefix">🇮🇳 +91</span>
+              <input type="tel" placeholder="98XXXXXXXX" value={phone}
+                onChange={e => { setPhone(e.target.value.replace(/\D/g,'').slice(0,10)); clearErr() }}
+                inputMode="numeric" maxLength={10} autoFocus required />
             </div>
-            <div className="form-row2">
-              <div className="form-group">
-                <label>Mobile Number *</label>
-                <input type="tel" placeholder="98XXXXXXXX" value={regPhone}
-                  onChange={e => setRegPhone(e.target.value)} required />
-              </div>
-            </div>
-            <div className="form-row2">
-              <div className="form-group">
-                <label>Password *</label>
-                <input type="password" placeholder="Min 8 chars" value={regPass}
-                  onChange={e => setRegPass(e.target.value)} required minLength={8} />
-              </div>
-              <div className="form-group">
-                <label>Confirm Password *</label>
-                <input type="password" placeholder="Repeat" value={regPass2}
-                  onChange={e => setRegPass2(e.target.value)} required minLength={8} />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Aadhaar Number <span className="optional-tag">optional</span></label>
-              <input type="text" placeholder="Enter 12-digit Aadhaar" value={regAadhaar}
-                onChange={e => setRegAadhaar(e.target.value.replace(/\D/g,'').slice(0,12))}
-                inputMode="numeric" maxLength={12} />
-              <div className="aadhaar-preview">{maskAadhaar(regAadhaar)}</div>
-            </div>
-            <div className="form-group">
-              <label>Employment / Professional Status *</label>
-              <select value={regEmp} onChange={e => setRegEmp(e.target.value)}
-                className="form-select" required>
-                <option value="">— Select your status —</option>
-                {EMPLOYMENT_OPTIONS.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <button type="submit" className="btn-primary w-full" disabled={loading}>
-              {loading ? '⏳ Creating account…' : '✅ Create Account'}
-            </button>
-          </form>
-        </>
+          </div>
+          <button type="submit" className="btn-primary w-full mt-1" disabled={fmt(phone).length < 10}>
+            Continue →
+          </button>
+          <p className="modal-note mt-1">
+            New user? Just enter your number — we'll guide you through registration.
+          </p>
+        </form>
       )}
 
-      {/* ── LOGIN ── */}
-      {view === 'login' && (
-        <>
-          <p className="modal-sub" style={{marginBottom:'1rem'}}>Login to your citizen portal</p>
-          <div className="modal-login-tabs">
-            <button className={loginTab === 'password' ? 'active' : ''} onClick={() => { setLoginTab('password'); reset() }}>🔑 Password</button>
-            <button className={loginTab === 'otp'      ? 'active' : ''} onClick={() => { setLoginTab('otp'); reset() }}>📱 OTP</button>
+      {/* ── STEP: OTP (login) ───────────────── */}
+      {screen === 'otp' && (
+        <form className="modal-form" onSubmit={handleVerifyOtp}>
+          <button type="button" className="modal-back" onClick={() => { setScreen('phone'); clearErr() }}>← Back</button>
+          <div className="modal-step-title">Verify Your Number</div>
+          <p className="modal-step-sub">OTP sent to <strong>{maskedPhone}</strong></p>
+          <div className="otp-sent-badge">📱 OTP sent to your mobile</div>
+          {err && <div className="auth-msg error">{err}</div>}
+          <div className="form-group" style={{alignItems:'center', gap:'.6rem'}}>
+            <OtpBoxes value={otp} onChange={setOtp} />
           </div>
-          {err     && <div className="auth-msg error">{err}</div>}
-          {success && <div className="auth-msg success">{success}</div>}
+          {pendOtp && <p className="modal-note" style={{textAlign:'left'}}>Demo OTP: <strong style={{color:'var(--accent)'}}>{pendOtp}</strong></p>}
+          <div className="otp-resend-row">
+            {countdown > 0
+              ? <span>Resend OTP in <strong>{countdown}s</strong></span>
+              : <button type="button" className="link-btn" onClick={handleSendOtp}>Resend OTP</button>
+            }
+            <button type="button" className="link-btn" onClick={() => { setScreen('pwd'); clearErr() }}>
+              Use password instead
+            </button>
+          </div>
+          <button type="submit" className="btn-primary w-full mt-1" disabled={otp.length < 6}>
+            Verify & Sign In
+          </button>
+        </form>
+      )}
 
-          {loginTab === 'password' && (
-            <form className="modal-form" onSubmit={handleLoginPass}>
-              <div className="form-group">
-                <label>Mobile Number</label>
-                <input type="tel" placeholder="98XXXXXXXX" value={loginPhone}
-                  onChange={e => setLoginPhone(e.target.value)} required />
-              </div>
-              <div className="form-group">
-                <label>Password</label>
-                <input type="password" placeholder="Your password" value={loginPass}
-                  onChange={e => setLoginPass(e.target.value)} required />
-              </div>
-              <button type="submit" className="btn-primary w-full" disabled={loading}>
-                {loading ? '⏳ Signing in…' : '🚀 Login'}
-              </button>
-            </form>
-          )}
+      {/* ── STEP: PASSWORD (login) ──────────── */}
+      {screen === 'pwd' && (
+        <form className="modal-form" onSubmit={handlePwdLogin}>
+          <button type="button" className="modal-back" onClick={() => { setScreen('otp'); clearErr() }}>← Back</button>
+          <div className="modal-step-title">Enter Password</div>
+          <p className="modal-step-sub">Mobile: <strong>+91 {fmt(phone)}</strong></p>
+          {err && <div className="auth-msg error">{err}</div>}
+          <div className="form-group">
+            <label>Password</label>
+            <input type="password" placeholder="Your account password" value={pass}
+              onChange={e => { setPass(e.target.value); clearErr() }} autoFocus required />
+          </div>
+          <button type="submit" className="btn-primary w-full mt-1" disabled={busy}>
+            {busy ? 'Signing in…' : 'Sign In →'}
+          </button>
+          <div className="otp-resend-row" style={{justifyContent:'center', marginTop:'.5rem'}}>
+            <button type="button" className="link-btn" onClick={handleSendOtp}>Login with OTP instead</button>
+          </div>
+        </form>
+      )}
 
-          {loginTab === 'otp' && (
-            <form className="modal-form" onSubmit={handleVerifyOtp}>
-              <div className="form-group">
-                <label>Mobile Number</label>
-                <div className="otp-phone-row">
-                  <input type="tel" placeholder="98XXXXXXXX" value={loginPhone}
-                    onChange={e => { setLoginPhone(e.target.value); setOtpSent(false); setOtp('') }}
-                    required />
-                  <button type="button" className="btn-otp-send"
-                    onClick={handleSendOtp}
-                    disabled={loading || countdown > 0}>
-                    {loading && !otpSent ? '⏳' : countdown > 0 ? `${countdown}s` : otpSent ? '🔄 Resend' : 'Send OTP'}
-                  </button>
-                </div>
+      {/* ── STEP: REGISTER (form) ───────────── */}
+      {screen === 'register' && (
+        <form className="modal-form" onSubmit={handleRegisterSubmit}>
+          <button type="button" className="modal-back" onClick={() => { setScreen('phone'); clearErr() }}>← Back</button>
+          <div className="modal-step-title">Create Your Account</div>
+          <p className="modal-step-sub">New to ExpressScheme — let's set you up</p>
+          {err && <div className="auth-msg error">{err}</div>}
+          <div className="form-group">
+            <label>Full Name *</label>
+            <input type="text" placeholder="As per Aadhaar / official ID" value={name}
+              onChange={e => { setName(e.target.value); clearErr() }} required autoFocus />
+          </div>
+          <div className="form-group">
+            <label>Mobile Number *</label>
+            <div className="phone-input-wrap disabled">
+              <span className="phone-prefix">🇮🇳 +91</span>
+              <input type="tel" value={fmt(phone)} readOnly style={{opacity:.7}} />
+            </div>
+            <span className="field-hint">Pre-filled from previous step</span>
+          </div>
+          <div className="form-row2">
+            <div className="form-group">
+              <label>Password *</label>
+              <input type="password" placeholder="Min 8 characters" value={pass}
+                onChange={e => { setPass(e.target.value); clearErr() }} required minLength={8} />
+            </div>
+            <div className="form-group">
+              <label>Confirm Password *</label>
+              <input type="password" placeholder="Repeat password" value={pass2}
+                onChange={e => { setPass2(e.target.value); clearErr() }} required />
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Aadhaar Number <span className="optional-tag">optional</span></label>
+            <input type="text" placeholder="12-digit Aadhaar number" value={aadhaar}
+              onChange={e => { setAadhaar(e.target.value.replace(/\D/g,'').slice(0,12)); clearErr() }}
+              inputMode="numeric" maxLength={12} />
+            {aadhaar.length > 0 && (
+              <div className="aadhaar-preview">
+                <span className="aadh-label">Stored as:</span>
+                <span className="aadh-mask">{maskAadhaar(aadhaar)}</span>
               </div>
-              {otpSent && (
-                <div className="form-group">
-                  <label>Enter 6-digit OTP</label>
-                  <input type="text" placeholder="_ _ _ _ _ _" value={otp}
-                    onChange={e => setOtp(e.target.value.replace(/\D/g,'').slice(0,6))}
-                    inputMode="numeric" maxLength={6} required
-                    style={{letterSpacing:'0.4em', textAlign:'center', fontSize:'1.3rem'}} />
-                  {demoOtp && <p className="modal-note" style={{textAlign:'left',marginTop:'.3rem'}}>Demo OTP: <strong>{demoOtp}</strong></p>}
-                </div>
-              )}
-              <button type="submit" className="btn-primary w-full" disabled={loading || !otpSent}>
-                {loading ? '⏳ Verifying…' : '✅ Verify & Login'}
-              </button>
-            </form>
-          )}
-        </>
+            )}
+          </div>
+          <div className="form-group">
+            <label>Employment / Professional Status *</label>
+            <select value={emp} onChange={e => { setEmp(e.target.value); clearErr() }}
+              className="form-select" required>
+              <option value="">— Select your current status —</option>
+              {EMP_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <button type="submit" className="btn-primary w-full mt-1" disabled={busy}>
+            {busy ? 'Please wait…' : 'Verify Mobile & Create Account →'}
+          </button>
+        </form>
+      )}
+
+      {/* ── STEP: VERIFY (register OTP) ─────── */}
+      {screen === 'verify' && (
+        <form className="modal-form" onSubmit={handleCreateAccount}>
+          <button type="button" className="modal-back" onClick={() => { setScreen('register'); clearErr() }}>← Back</button>
+          <div className="modal-step-title">Verify Mobile Number</div>
+          <p className="modal-step-sub">OTP sent to <strong>{maskedPhone}</strong></p>
+          <div className="otp-sent-badge">📱 OTP sent to your mobile</div>
+          {err && <div className="auth-msg error">{err}</div>}
+          <div className="form-group" style={{alignItems:'center', gap:'.6rem'}}>
+            <OtpBoxes value={otp} onChange={setOtp} />
+          </div>
+          {pendOtp && <p className="modal-note" style={{textAlign:'left'}}>Demo OTP: <strong style={{color:'var(--accent)'}}>{pendOtp}</strong></p>}
+          <div className="otp-resend-row">
+            {countdown > 0
+              ? <span>Resend in <strong>{countdown}s</strong></span>
+              : <button type="button" className="link-btn" onClick={() => {
+                  const code = genOtp(); storePendingOtp(fmt(phone), code); setPendOtp(code); startCountdown(30); clearErr()
+                }}>Resend OTP</button>
+            }
+          </div>
+          <button type="submit" className="btn-primary w-full mt-1" disabled={otp.length < 6 || busy}>
+            {busy ? 'Creating account…' : 'Verify & Create Account →'}
+          </button>
+        </form>
+      )}
+
+      {/* ── STEP: SUCCESS ───────────────────── */}
+      {screen === 'success' && (
+        <div className="auth-success-screen">
+          <div className="auth-success-icon">✅</div>
+          <div className="auth-success-title">Account Created!</div>
+          <p className="auth-success-sub">Welcome, <strong>{name}</strong>. Redirecting to your dashboard…</p>
+          <div className="auth-success-bar"><div className="auth-success-fill" /></div>
+        </div>
       )}
     </>
   )
 }
 
-// ── Modal wrapper ─────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────
+   Modal wrapper
+───────────────────────────────────────────── */
 export default function LoginModal({ role, onClose }) {
   const navigate = useNavigate()
   if (!role) return null
