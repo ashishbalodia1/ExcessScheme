@@ -131,6 +131,16 @@ export default function UserDashboard() {
   }
   const navigate = useNavigate()
 
+  // ── Session: read logged-in citizen ───────────────────────────────
+  const citizen = (() => { try { return JSON.parse(sessionStorage.getItem('citizen_user') || 'null') } catch { return null } })()
+  useEffect(() => { if (!citizen) navigate('/') }, [])
+  const citizenName  = citizen?.name  || 'Citizen'
+  const citizenEmp   = citizen?.employment || ''
+  const citizenPhone = citizen?.phone || ''
+  const aadhaarLinked = !!citizen?.aadhaarLast4
+
+  const handleLogout = () => { sessionStorage.removeItem('citizen_user'); navigate('/') }
+
   const filteredSchemes = SCHEMES.filter(s =>
     s.status === 'active' && (!browseFilter || s.name.toLowerCase().includes(browseFilter.toLowerCase()))
   )
@@ -164,12 +174,12 @@ export default function UserDashboard() {
           </div>
           <div className="topbar-right">
             <div className="verify-status"><span className="chain-dot"></span>AI Verified</div>
-            <button
-              onClick={() => navigate('/wallet')}
-              style={{ background:'rgba(129,140,248,.12)', color:'var(--accent)', border:'1px solid rgba(129,140,248,.3)', borderRadius:'7px', padding:'.38rem .85rem', fontSize:'.82rem', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:'.35rem', whiteSpace:'nowrap' }}
-            >
-              ◎ Wallet
-            </button>
+            <button onClick={() => navigate('/wallet')} style={{ background:'rgba(129,140,248,.12)', color:'var(--accent)', border:'1px solid rgba(129,140,248,.3)', borderRadius:'7px', padding:'.38rem .85rem', fontSize:'.82rem', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:'.35rem', whiteSpace:'nowrap' }}>◎ Wallet</button>
+            <div className="topbar-user">
+              <span className="topbar-avatar">{citizenName.charAt(0).toUpperCase()}</span>
+              <span className="topbar-uname">{citizenName}</span>
+            </div>
+            <button onClick={handleLogout} className="btn-logout">Sign Out</button>
             <ThemeToggle />
           </div>
         </div>
@@ -179,10 +189,13 @@ export default function UserDashboard() {
           <div className="tab-content active">
             <div className="dash-welcome">
               <div>
-                <h1>Welcome back, Priya 👋</h1>
-                <p>Your AICTE Pragati token is minted — distribution pending batch 0021.</p>
+                <h1>Welcome back, {citizenName} 👋</h1>
+                <p>{citizenEmp ? citizenEmp + ' · ' : ''}Scholarship portal active — track applications & on-chain status below.</p>
               </div>
-              <span className="welcome-date">STU-2026-0554</span>
+              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'.3rem'}}>
+                <span className="welcome-date">{citizenPhone ? '+91 ' + citizenPhone : 'Citizen'}</span>
+                {aadhaarLinked && <span className="topbar-badge">🔒 Aadhaar Linked</span>}
+              </div>
             </div>
             <div className="kpi-grid">
               {[

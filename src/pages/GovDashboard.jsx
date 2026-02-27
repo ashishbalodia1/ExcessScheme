@@ -153,6 +153,15 @@ export default function GovDashboard() {
   }
   const navigate = useNavigate()
 
+  // ── Session: read logged-in gov org ────────────────────────────────
+  const govOrg = (() => { try { return JSON.parse(sessionStorage.getItem('gov_org') || 'null') } catch { return null } })()
+  useEffect(() => { if (!govOrg) navigate('/') }, [])
+  const orgName   = govOrg?.orgName  || 'Officer'
+  const orgScheme = govOrg?.scheme   || ''
+  const orgId     = govOrg?.orgId    || ''
+
+  const handleLogout = () => { sessionStorage.removeItem('gov_org'); navigate('/') }
+
   const filteredSchemes = SCHEMES.filter(s =>
     !schemeFilter || s.name.toLowerCase().includes(schemeFilter.toLowerCase())
   )
@@ -175,19 +184,19 @@ export default function GovDashboard() {
         <div className="dash-topbar">
           <div className="topbar-left">
             <button className="sidebar-toggle" onClick={() => setSidebarOpen(o => !o)}>☰</button>
-            <span className="topbar-title">ExpressScheme — Gov Panel</span>
+            <span className="topbar-title">Gov Control Panel</span>
           </div>
           <div className="topbar-right">
             <div className="topbar-search">
               <input type="text" placeholder="Search schemes, students…" />
             </div>
             <div className="topbar-chain"><span className="chain-dot"></span>Chain: Active</div>
-            <button
-              onClick={() => navigate('/wallet')}
-              style={{ background:'rgba(0,232,198,.12)', color:'var(--accent)', border:'1px solid rgba(0,232,198,.3)', borderRadius:'7px', padding:'.38rem .85rem', fontSize:'.82rem', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:'.35rem', whiteSpace:'nowrap' }}
-            >
-              ◎ Wallet
-            </button>
+            <button onClick={() => navigate('/wallet')} style={{ background:'rgba(0,232,198,.12)', color:'var(--accent)', border:'1px solid rgba(0,232,198,.3)', borderRadius:'7px', padding:'.38rem .85rem', fontSize:'.82rem', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:'.35rem', whiteSpace:'nowrap' }}>◎ Wallet</button>
+            <div className="topbar-user">
+              <span className="topbar-avatar" style={{background:'rgba(0,232,198,.18)',color:'#00e8c6'}}>{orgName.charAt(0).toUpperCase()}</span>
+              <span className="topbar-uname">{orgName.length > 18 ? orgName.slice(0,18)+'…' : orgName}</span>
+            </div>
+            <button onClick={handleLogout} className="btn-logout">Sign Out</button>
             <ThemeToggle />
           </div>
         </div>
@@ -197,10 +206,13 @@ export default function GovDashboard() {
           <div className="tab-content active">
             <div className="dash-welcome">
               <div>
-                <h1>Good Morning, Officer Rajiv 👋</h1>
-                <p>Live status across all 7 active NSP / central scholarship schemes — FY 2025-26.</p>
+                <h1>Welcome, {orgName} 👋</h1>
+                <p>{orgScheme ? orgScheme + ' · ' : ''}Live status across all active scholarship schemes — FY 2025-26.</p>
               </div>
-              <span className="welcome-date">Feb 20, 2026</span>
+              <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'.3rem'}}>
+                <span className="welcome-date">{new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</span>
+                {orgId && <span className="topbar-badge" style={{fontSize:'.72rem',fontFamily:'monospace'}}>{orgId}</span>}
+              </div>
             </div>
             <div className="kpi-grid">
               {[
