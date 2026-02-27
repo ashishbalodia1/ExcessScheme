@@ -919,8 +919,41 @@ img { display:block; max-width:100%; }
 .w-full { width:100%; justify-content:center; padding:.9rem; font-size:1rem; margin-top:.5rem; }
 .modal-note { text-align:center; color:var(--text-3); font-size:.78rem; margin-top:1rem; }
 
-/* ── Citizen Modal extras ─────────────────────────────────────────────── */
+/* ── Modal size variants ──────────────────────────────────────────────── */
 .modal-box--citizen { max-width: 520px; }
+.modal-box--gov     { max-width: 560px; }
+
+/* Org ID badge shown after gov registration */
+.org-id-badge {
+  font-family: 'Courier New', monospace;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: .2em;
+  color: var(--accent);
+  background: rgba(129,140,248,.12);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: .7rem 1.6rem;
+  margin: .2rem 0;
+  display: inline-block;
+  word-break: break-all;
+  text-align: center;
+  width: 100%;
+}
+
+/* Gov register info note */
+.gov-register-note {
+  background: rgba(129,140,248,.07);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: .65rem .9rem;
+  font-size: .82rem;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+[data-theme="light"] .org-id-badge      { background: rgba(79,70,229,.08); }
+[data-theme="light"] .gov-register-note { background: rgba(79,70,229,.05); }
 
 /* Auth view switcher (Sign In / New Account) */
 .modal-auth-tabs {
