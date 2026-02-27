@@ -38,7 +38,10 @@ export default function AIVerify() {
   const [running, setRunning] = useState(false)
   const [done, setDone] = useState(false)
   const [score, setScore] = useState(0)
-  const [txHash] = useState(() => '0x' + Array.from({length:40}, () => '0123456789ABCDEF'[Math.floor(Math.random()*16)]).join(''))
+  const [ringProgress, setRingProgress] = useState(0)
+  const [verifyError, setVerifyError] = useState('')
+  const [downloadDone, setDownloadDone] = useState(false)
+  const [txHash] = useState(() => '0x' + Array.from({length:64}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join(''))
   const ringRef = useRef(null)
 
   // ── Aadhaar Verification State ──
@@ -80,8 +83,12 @@ export default function AIVerify() {
   const handleUpload = (doc) => setUploads(u => ({ ...u, [doc]: true }))
 
   const startVerification = () => {
-    if (!formData.name) { alert('Please fill in your details.'); return }
-    setRunning(true); setDone(false); setPipelineStep(0); setScore(0)
+    if (!formData.name.trim() || !formData.id.trim()) {
+      setVerifyError('Please fill in your Full Name and Student ID before running verification.')
+      return
+    }
+    setVerifyError('')
+    setRunning(true); setDone(false); setPipelineStep(0); setScore(0); setRingProgress(0)
     let i = 0
     const iv = setInterval(() => {
       i++
@@ -90,6 +97,7 @@ export default function AIVerify() {
         clearInterval(iv)
         setRunning(false)
         setDone(true)
+        setTimeout(() => setRingProgress(87), 120)
         animateScore(87)
       }
     }, 900)
@@ -105,7 +113,7 @@ export default function AIVerify() {
   }
 
   const circumference = 2 * Math.PI * 48
-  const dashArray = done ? `${(score / 100) * circumference} ${circumference}` : `0 ${circumference}`
+  const dashOffset = circumference * (1 - ringProgress / 100)
 
   return (
     <div className="ai-page">
@@ -292,9 +300,16 @@ export default function AIVerify() {
                 onChange={e => setFormData(f => ({...f, income:e.target.value}))}
               />
             </div>
-            <button className="btn-primary w-full" onClick={startVerification} disabled={running}>
-              {running ? '⏳ Verifying…' : '🤖 Run AI Verification'}
+            <button className="btn-primary w-full" onClick={startVerification} disabled={running}
+              style={done ? {background:'linear-gradient(135deg,#059669,#16A34A)'} : {}}
+            >
+              {running ? '⏳ Verifying pipeline…' : done ? '✅ Verified — Run Again' : '🤖 Run AI Verification'}
             </button>
+            {verifyError && (
+              <p style={{ marginTop:'.75rem', color:'var(--danger)', fontSize:'.82rem', background:'rgba(239,68,68,.08)', border:'1px solid rgba(239,68,68,.2)', borderRadius:'8px', padding:'.55rem .9rem', lineHeight:1.5 }}>
+                ⚠️ {verifyError}
+              </p>
+            )}
           </div>
         </div>
 
@@ -342,13 +357,20 @@ export default function AIVerify() {
                 <div className="aer-score-section">
                   <div className="aer-score-ring">
                     <svg className="ring-svg" viewBox="0 0 120 120">
+                      <defs>
+                        <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%"   stopColor="#6366F1" />
+                          <stop offset="50%"  stopColor="#818CF8" />
+                          <stop offset="100%" stopColor="#34D399" />
+                        </linearGradient>
+                      </defs>
                       <circle className="ring-bg"   cx="60" cy="60" r="48" />
                       <circle
                         className="ring-fill"
                         cx="60" cy="60" r="48"
-                        strokeDasharray={dashArray}
-                        strokeDashoffset="0"
-                        style={{ transition:'stroke-dasharray 1.5s ease' }}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={dashOffset}
+                        style={{ transition:'stroke-dashoffset 1.4s cubic-bezier(.34,1.56,.64,1)' }}
                       />
                     </svg>
                     <div className="ring-inner">
@@ -376,7 +398,19 @@ export default function AIVerify() {
                   {txHash}
                 </div>
                 <div className="aer-actions">
-                  <button className="btn-primary" onClick={() => alert('Proof downloaded!')}>⬇ Download Proof</button>
+                  <button
+                    className="btn-primary"
+                    style={downloadDone ? {background:'#16A34A'} : {}}
+                    onClick={() => {
+                      const el = document.createElement('a')
+                      const blob = new Blob([`EXCESSSCHEME VERIFICATION PROOF\n\nStudent: ${formData.name}\nStudent ID: ${formData.id}\nDOB: ${formData.dob}\nAI Trust Score: ${score}/100\nTransaction Hash: ${txHash}\nTimestamp: ${new Date().toISOString()}\n\nAll checks: PASSED\nOn-chain anchored: YES`], {type:'text/plain'})
+                      el.href = URL.createObjectURL(blob)
+                      el.download = `verification-proof-${formData.id || 'student'}.txt`
+                      el.click()
+                      setDownloadDone(true)
+                      setTimeout(() => setDownloadDone(false), 3000)
+                    }}
+                  >{downloadDone ? '✅ Proof Saved!' : '⬇ Download Proof'}</button>
                   <button className="btn-outline-accent" onClick={() => navigate('/user-dashboard')}>← Dashboard</button>
                 </div>
               </div>

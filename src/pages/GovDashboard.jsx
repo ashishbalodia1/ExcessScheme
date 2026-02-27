@@ -589,7 +589,11 @@ export default function GovDashboard() {
                   <div className="rc-title">{r.title}</div>
                   <div className="rc-desc">{r.desc}</div>
                   <div className="rc-meta">{r.meta}</div>
-                  <button className="btn-sm btn-view" onClick={() => alert('Downloading ' + r.title)}>
+                  <button className="btn-sm btn-view" onClick={() => {
+                    const a = document.createElement('a')
+                    const blob = new Blob([`EXCESSSCHEME AUDIT REPORT\n${r.title}\n${r.desc}\n${r.meta}\nGenerated: ${new Date().toISOString()}`], {type:'text/plain'})
+                    a.href = URL.createObjectURL(blob); a.download = r.title.replace(/\s+/g,'-') + '.txt'; a.click()
+                  }}>
                     ⬇ Download PDF
                   </button>
                 </div>
@@ -617,8 +621,9 @@ export default function GovDashboard() {
                 <div className="form-group"><label>Deadline</label><input type="date" /></div>
               </div>
               <div className="form-group"><label>Eligibility Criteria</label><input type="text" placeholder="Describe criteria…" /></div>
-              <button className="btn-primary w-full" onClick={() => { alert('Scheme created!'); setShowCreateScheme(false) }}>
-                Create & Tokenize
+              <button className="btn-primary w-full" onClick={() => { setShowCreateScheme(false) }}
+                style={{background:'linear-gradient(135deg,#059669,#16A34A)'}}>
+                ✅ Create & Tokenize
               </button>
             </div>
           </div>

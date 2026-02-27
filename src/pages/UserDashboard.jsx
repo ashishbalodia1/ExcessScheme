@@ -72,6 +72,12 @@ export default function UserDashboard() {
   const [verifyRunning, setVerifyRunning] = useState(false)
   const [verifyStep, setVerifyStep] = useState(-1)
   const [verifyDone, setVerifyDone] = useState(false)
+  const [toast, setToast] = useState(null)
+
+  const showToast = (msg, type = 'ok') => {
+    setToast({ msg, type })
+    setTimeout(() => setToast(null), 3200)
+  }
 
   // ── Contract state ──────────────────────────────────────
   const [chainStatus,   setChainStatus]   = useState(null)   // { isRegistered, milestoneCompleted, hasBeenPaid }
@@ -516,14 +522,14 @@ export default function UserDashboard() {
             <div className="modal-title">Apply — {applyModal.name}</div>
             <div className="modal-sub">Amount: ₹{applyModal.amount?.toLocaleString()} · Deadline: {applyModal.deadline}</div>
             <div className="modal-form">
-              <div className="form-group"><label>Full Name</label><input type="text" defaultValue="Priya Kumari" /></div>
-              <div className="form-group"><label>Student ID</label><input type="text" defaultValue="STU-2026-0042" /></div>
+              <div className="form-group"><label>Full Name</label><input type="text" defaultValue={citizenName} /></div>
+              <div className="form-group"><label>Student ID</label><input type="text" defaultValue={'STU-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000)} /></div>
               <div className="form-group"><label>Institution</label><input type="text" placeholder="Your college/school" /></div>
               <div className="form-group"><label>Family Annual Income (₹)</label><input type="number" placeholder="Enter income" /></div>
               <button
                 type="button"
                 className="btn-primary w-full"
-                onClick={() => { alert('Application submitted! AI verification will begin automatically.'); setApplyModal(null) }}
+                onClick={() => { showToast('Application submitted! AI verification will begin automatically.'); setApplyModal(null) }}
               >
                 Submit Application
               </button>
